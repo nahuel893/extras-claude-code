@@ -30,13 +30,13 @@ test('/cc opens the list above the prompt, the band left to the engine until the
   expect(await cc()).toBe('Command list open above the prompt: press a row\'s digit to copy it.')
 
   const ui = await $.ui.mount(band())
-  expect(await rowLabels(ui)).toEqual(['#1  ls'])
+  expect(await rowLabels(ui)).toEqual(['ls'])
   await ui.unmount()
 })
 
 // T3: the list
 
-test('rows read #n and the first line, newest first, above what the engine draws', async ($, on) => {
+test('rows read the first line, newest first, above what the engine draws', async ($, on) => {
   const { cc } = await engine($, on)
   await $.session.append(reply('r1', fence('ls')))
   await $.session.append(reply('r2', fence('cd /srv/minecraft\nsudo systemctl restart minecraft')))
@@ -44,7 +44,7 @@ test('rows read #n and the first line, newest first, above what the engine draws
   await cc()
 
   const ui = await $.ui.mount(band())
-  expect(await rowLabels(ui)).toEqual(['#3  pwd', '#2  cd /srv/minecraft …', '#1  ls'])
+  expect(await rowLabels(ui)).toEqual(['pwd', 'cd /srv/minecraft …', 'ls'])
   expect((await ui.find({ type: 'Text', text: /^engine$/ }))?.text).toBe('engine')
   await ui.unmount()
 })

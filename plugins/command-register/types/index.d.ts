@@ -3,6 +3,6 @@ export type Command = { row: string; text: string }
 
 declare module 'claude-code' {
   interface PluginState {
-    'command-register': { commands: Shaped<Command[]>; isOpen: boolean }
+    'command-register': { commands: Shaped<Command[]>; isOpen: boolean; focusKey: string | null; filter: string }
   }
 }
