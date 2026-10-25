@@ -20,25 +20,34 @@ Answer `y` to add the marketplace, then pick a scope (user scope loads it in eve
 
 | You type | What happens |
 | --- | --- |
-| `/cc` | A list opens above the prompt, newest command first. Press a row's digit to copy that command and close the list. |
+| `/cc` | A framed list opens above the prompt, newest command first. Press a row's digit to copy that command and close the list. |
 | `/cc <n>` | Copies command `n` right away, for example `/cc 3`. |
 
-The list:
+The list is a rounded dialog in the band above the prompt, with `Commands` and `<shown> of <total>` on its border:
 
 ```
-Copy a command: press its digit, 0 closes
-1: #12  sudo systemctl restart minecraft
-2: #11  journalctl -u minecraft -n 50 …
-3: #10  df -h
-0: close   older #1-#3: /cc <n>
+╭─ Commands ─────────────────────────── 3 of 12 ──╮
+│ filter: piper_                                  │
+│   1: yay -S --mflags --skipchecksums piper-tts  │
+│ ▶ 2: yay -S piper-voices-es-ar                  │
+│   3: spd-say -w -l es-ar "Hola, soy el narrador"│
+│ ┄ preview ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
+│ yay -S piper-voices-es-ar                       │
+│ 1-9 copy · ctrl+x tab to browse · 0: close      │
+╰─────────────────────────────────────────────────╯
 ```
 
 - `1` to `9` copy that row's command. Type the digit in the empty prompt, with no focus step needed.
-- To use the keyboard ring instead, press `ctrl+x tab` to focus the list, move with Tab, Shift+Tab or
-  the left and right arrows, and press Enter on a row.
 - `0` closes the list. So does sending your next prompt or command.
-- The list shows the nine newest commands, fewer when the band above the prompt is short. Older ones
-  stay in the register: copy them with `/cc <n>`.
+- `▶` marks the selected row and the preview shows its command whole, wrapped, a few lines at most.
+  Without focus the selection is row 1.
+- Press `ctrl+x tab` (or click a row) to give the keyboard to the list. Then Tab and the arrows walk
+  the rows and the marker and preview follow, Enter copies the focused row, and typing filters the
+  list through the filter field. Esc gives the keys back to the prompt.
+- The hint line changes with who holds the keyboard, and gets shorter in a narrow band.
+- The list shows up to nine commands, fewer when the band above the prompt is short. The filter
+  matches anywhere in the command, ignoring case. Older ones stay in the register: copy them with
+  `/cc <n>`.
 - A row shows the command's first line, with `…` when it has more lines. The whole command is copied.
 
 ## What counts as a command
@@ -86,9 +95,9 @@ default bindings.
 `ctrl+x tab` by default in the `Chat` context. You don't need it for the digits. Rebind it only if
 you want a different key for the ring.
 
-**Optional: walk the rows with up and down.** Inside the focused band, up and down scroll it by
-default, and Tab or left and right move between rows. To make up and down move between rows, add
-this block. It applies to every plugin's band, not only this one:
+**Optional: walk the rows with up and down.** Inside the focused band, up and down may scroll it
+instead of moving the ring, depending on your bindings; Tab always moves between rows. To make up and
+down move between rows, add this block. It applies to every plugin's band, not only this one:
 
 ```json
 {
@@ -103,7 +112,9 @@ this block. It applies to every plugin's band, not only this one:
 ## Limits
 
 - Esc does not close the list. Esc gives the keys back to the prompt, but the band above the prompt
-  doesn't tell a mod when that happens. Close the list with `0` or by sending your next prompt.
+  doesn't tell a mod when that happens, so the hint may keep showing the focused keys until you
+  close the list with `0` or send your next prompt.
+- A mod cannot take the keyboard: the list takes keys only after `ctrl+x tab` or a click.
 - Each copy goes to the clipboard of the surface you are using. In a terminal this uses the
   machine's clipboard tool, or OSC 52 when there is none.
 

@@ -16,9 +16,9 @@ test('each row carries its digit, 1 the newest, and 0 closes', async ($, on) => 
   const ui = await $.ui.mount(band())
   const buttons = await ui.findAll({ type: 'Button' })
   expect(buttons.map(button => [button.props.label, button.props.hotkey])).toEqual([
-    ['#3  echo 3', '1'],
-    ['#2  echo 2', '2'],
-    ['#1  echo 1', '3'],
+    ['echo 3', '1'],
+    ['echo 2', '2'],
+    ['echo 1', '3'],
     ['close', '0'],
   ])
   await ui.unmount()
@@ -39,17 +39,17 @@ test("pressing a row's digit copies that row's command and closes the list", asy
   await ui.unmount()
 })
 
-test('past nine commands the list shows the nine newest and names /cc <n> for the rest', async ($, on) => {
+test('past nine commands the list shows the nine newest and counts the rest in the title', async ($, on) => {
   const { cc } = await engine($, on)
   for (let n = 1; n <= 12; n++) await $.session.append(reply(`r${n}`, fence(`echo ${n}`)))
   await cc()
 
-  const ui = await $.ui.mount(band())
+  const ui = await $.ui.mount(band(30))
   const rows = (await ui.findAll({ type: 'Button' })).filter(button => button.props.label !== 'close')
   expect(rows.map(button => button.props.hotkey)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9'])
-  expect(rows[0]?.props.label).toBe('#12  echo 12')
-  expect(rows[8]?.props.label).toBe('#4  echo 4')
-  expect((await ui.find({ type: 'Text', text: /older/ }))?.text).toContain('#1-#3: /cc <n>')
+  expect(rows[0]?.props.label).toBe('echo 12')
+  expect(rows[8]?.props.label).toBe('echo 4')
+  expect((await ui.find({ type: 'Text', text: /9 of 12/ }))?.text).toContain('9 of 12')
   await ui.unmount()
 })
 
@@ -58,8 +58,8 @@ test('a short band shows only the rows it holds whole, so every shown digit is a
   for (let n = 1; n <= 6; n++) await $.session.append(reply(`r${n}`, fence(`echo ${n}`)))
   await cc()
 
-  // Six rows of band: the hint and the close row leave four for commands.
-  const ui = await $.ui.mount(band(6))
-  expect(await rowLabels(ui)).toEqual(['#6  echo 6', '#5  echo 5', '#4  echo 4', '#3  echo 3'])
+  // Nine rows of band: the frame, the filter, the preview and the hint leave three for commands.
+  const ui = await $.ui.mount(band(9))
+  expect(await rowLabels(ui)).toEqual(['echo 6', 'echo 5', 'echo 4'])
   await ui.unmount()
 })

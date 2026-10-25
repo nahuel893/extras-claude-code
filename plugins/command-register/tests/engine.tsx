@@ -48,6 +48,7 @@ export const engine = async ($: Engine, on: On) => {
     const { Text } = $.ui.resolve(e)
     return <Text>engine</Text>
   })
+  on('ui.focus', () => ({ value: {} }))
   on('ui.copy', (_, e) => {
     copied.push(e.text)
     return { value: { isCopied: true as const } }

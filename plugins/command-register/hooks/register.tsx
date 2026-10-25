@@ -2,6 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, RenderSurface } from 'claude-code'
 import type { Command } from '../types'
 import { commandsIn } from './commands'
+import { firstLine, hintText, previewLines, previewRule, rowLabel, visible } from './dialog'
 
 /**
  * The register, oldest first: a command's number is its place + 1. Change the tag when a
@@ -12,24 +13,15 @@ const commands = atom({ plugin: 'command-register', key: 'commands' } as const, 
 /** Whether `/cc` has the list open in the band above the prompt. */
 const isOpen = atom({ plugin: 'command-register', key: 'isOpen' } as const, false)
 
+/** The key of the band element holding the focus ring, when the band holds the keyboard. */
+const focusKey = atom({ plugin: 'command-register', key: 'focusKey' } as const, null)
+
+/** What the person typed in the list's filter. */
+const filter = atom({ plugin: 'command-register', key: 'filter' } as const, '')
+
 const EMPTY = 'No shell commands yet: the register fills as Claude gives them.'
 const USAGE = 'Usage: /cc to pick from the list, or /cc <n> to copy command n.'
 const OPENED = "Command list open above the prompt: press a row's digit to copy it."
-
-/** The command's first line, as a notice or a list row names it. */
-export const firstLine = (text: string) => text.split('\n').find(line => line.trim())?.trim() ?? ''
-
-/**
- * A list row's label: the number and the command's first line, ` …` when more lines follow,
- * cut to the band's width and with control characters (a tab) drawn as spaces, which a label refuses.
- */
-export const rowLabel = (n: number, text: string, columns: number) => {
-  const first = firstLine(text).replace(/[\u0000-\u001f\u007f]/g, ' ')
-  const label = `#${n}  ${first}${text.trim().includes('\n') ? ' …' : ''}`
-  const room = Math.max(12, columns)
-
-  return label.length > room ? `${label.slice(0, room - 1)}…` : label
-}
 
 /** Copies command `n` (1-based) and answers the line saying so, or why not. */
 const copyNumber = async ($: EngineInterface, n: number, surface?: RenderSurface) => {
@@ -44,6 +36,13 @@ const copyNumber = async ($: EngineInterface, n: number, surface?: RenderSurface
   return copied.isCopied
     ? `Copied #${n}: ${firstLine(command.text)}`
     : `Could not copy #${n} (${copied.reason}).`
+}
+
+/** Shuts the list and forgets the filter and the ring's place. */
+async function closeList($: EngineInterface) {
+  await update($, isOpen, () => false)
+  await update($, filter, () => '')
+  await update($, focusKey, () => null)
 }
 
 export const register: Register = on => {
@@ -86,7 +85,7 @@ export const register: Register = on => {
   // the keys back to the prompt and raises nothing), so going back to the prompt is the dismissal.
   // `/cc` itself passes here first and opens the list again at `command.run`.
   on('prompt.submit', async ($, e, next) => {
-    await update($, isOpen, () => false)
+    await closeList($)
 
     return next(e)
   }).catch(($, e, next) => next(e))
@@ -96,6 +95,7 @@ export const register: Register = on => {
 
     if (args === '') {
       if ((await read($, commands)).length === 0) return { text: EMPTY }
+      await closeList($)
       await update($, isOpen, () => true)
 
       return { text: OPENED }
@@ -105,10 +105,20 @@ export const register: Register = on => {
     return { text: await copyNumber($, Number(args)) }
   })
 
-  // The list, newest first, above whatever else the band holds. Each row is one Button with its
-  // digit as hotkey: a bare digit in the empty prompt presses a band Button, so `/cc` then `1`
-  // copies the newest command with no focus step. The person's ring (ctrl+x tab, then Tab or the
-  // arrows) walks the rows too, and Enter presses one.
+  // The ring moves by the person's Tab, arrows or click once the band holds the keyboard: follow it
+  // so the marker and the preview track the focused row, and the hint knows the band has the keys.
+  on('ui.focus', { component: 'AbovePrompt' }, async ($, e, next) => {
+    const moved = await next(e)
+    if (moved.deny === undefined) {
+      await update($, focusKey, () => (e.plugin === 'command-register' && e.element !== undefined ? e.element : null))
+    }
+
+    return moved
+  })
+
+  // The dialog, above whatever else the band holds: a rounded frame, the filter, up to nine rows
+  // (each a Button with its digit as hotkey: a bare digit in the empty prompt presses it with no
+  // focus step), the selected command whole, and a hint that depends on who holds the keyboard.
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     // A survey holds the band (its digits are the person's answer): the list waits for it.
     if (e.props.hasSurvey || !(await read($, isOpen))) return next(e)
@@ -116,37 +126,78 @@ export const register: Register = on => {
     const list = await read($, commands)
     if (list.length === 0) return next(e)
 
-    const { Box, Button, Text } = $.ui.resolve(e)
+    const { Box, Button, Input, Text } = $.ui.resolve(e)
+    const text = await read($, filter)
+    const focused = await read($, focusKey)
+    const matches = visible(list, text)
+
+    const inner = Math.max(20, e.props.bodyColumns - 4)
+    // Frame (2), filter (1), preview rule (1) and hint (1) are fixed; the preview takes up to three
+    // lines in a tall band, one in a short one. A taller tree scrolls, and the engine arms no digit
+    // of a row scrolled out of view.
+    const previewRoom = matches.length === 0 ? 0 : e.props.maxRows >= 14 ? 3 : 1
+    const shown = Math.max(1, Math.min(9, matches.length, e.props.maxRows - 5 - previewRoom))
+    const rows = matches.slice(0, shown)
+    const selected = rows.find(row => `command:${row.n}` === focused) ?? rows[0]
+    const isFocused = focused !== null
+    const preview = selected === undefined ? [] : previewLines(selected.text, inner, previewRoom)
+
     const pick = (n: number) => async (press: { surface: RenderSurface }) => {
       const said = await copyNumber($, n, press.surface)
-      await update($, isOpen, () => false)
+      await closeList($)
       $.ui.toast(said)
     }
-    // Nine digits, and no more rows than the band holds whole beside the hint and close rows: a
-    // taller tree scrolls, and the engine arms no digit of a row scrolled out of view.
-    const shown = Math.max(1, Math.min(9, e.props.maxRows - 2))
-    const rows = list
-      .map((command, i) => ({ n: i + 1, text: command.text }))
-      .reverse()
-      .slice(0, shown)
-    const older = list.length - rows.length
 
     return (
       <Box flexDirection="column">
         <Box flexDirection="column">
-          <Text dimColor>Copy a command: press its digit, 0 closes</Text>
-          {rows.map(({ n, text }, i) => (
-            <Button
-              key={`command:${n}`}
-              plain
-              hotkey={String(i + 1)}
-              label={rowLabel(n, text, e.props.bodyColumns - 4)}
-              onPress={pick(n)}
+          <Box borderStyle="round" borderColor="promptBorder" paddingX={1} flexDirection="column">
+            <Input
+              key="filter"
+              label="filter: "
+              placeholder="type to filter"
+              value={text}
+              submitLabel="copy"
+              onInput={value => update($, filter, () => value)}
+              onSubmit={async (value, press) => {
+                const first = visible(list, value)[0]
+                if (first === undefined) return
+                await pick(first.n)(press)
+              }}
             />
-          ))}
-          <Box>
-            <Button key="close" plain dimColor hotkey="0" label="close" onPress={() => update($, isOpen, () => false)} />
-            {older > 0 && <Text dimColor>{`   older ${older === 1 ? '#1' : `#1-#${older}`}: /cc <n>`}</Text>}
+            {rows.length === 0 && <Text dimColor>{`No command matches "${text}"`}</Text>}
+            {rows.map(({ n, text: command }, i) => (
+              <Box key={`row:${n}`}>
+                <Text color="suggestion">{selected?.n === n ? '▶ ' : '  '}</Text>
+                <Button
+                  key={`command:${n}`}
+                  plain
+                  hotkey={String(i + 1)}
+                  label={rowLabel(command, inner - 7)}
+                  onPress={pick(n)}
+                />
+              </Box>
+            ))}
+            {selected !== undefined && (
+              <>
+                <Text dimColor>{previewRule(inner)}</Text>
+                <Box key="preview" flexDirection="column">
+                  {preview.map((line, i) => (
+                    <Text key={`line:${i}`}>{line}</Text>
+                  ))}
+                </Box>
+              </>
+            )}
+            <Box key="hint">
+              <Text dimColor>{hintText(isFocused, inner)}</Text>
+              <Button key="close" plain dimColor hotkey="0" label="close" onPress={() => closeList($)} />
+            </Box>
+          </Box>
+          <Box position="absolute" top={0} left={2}>
+            <Text bold color="suggestion">{' Commands '}</Text>
+          </Box>
+          <Box position="absolute" top={0} right={2}>
+            <Text dimColor>{` ${rows.length} of ${list.length} `}</Text>
           </Box>
         </Box>
         {await next(e)}
