@@ -133,6 +133,20 @@ test('every section is a round card whose title sits on its top border', async (
   await ui.unmount()
 })
 
+test('the cards stack with no blank row between them', async ($, on) => {
+  const { clock } = world(on)
+  await startSession($, clock)
+
+  const ui = await $.ui.mount(PANE)
+  const root = await ui.drawn()
+  expect(root.props.gap ?? 0).toBe(0)
+  expect(root.props.rowGap ?? 0).toBe(0)
+  const cards = root.children.filter(child => typeof child === 'object' && child !== null) as Found[]
+  expect(cards.length).toBeGreaterThan(0)
+  for (const card of cards) expect(card.props.marginTop ?? 0).toBe(0)
+  await ui.unmount()
+})
+
 test('panelBackground paints the whole panel body, at least as tall as the pane', { options: { panelBackground: '#000000' } }, async ($, on) => {
   const { clock } = world(on)
   await startSession($, clock)

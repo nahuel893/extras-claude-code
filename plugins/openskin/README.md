@@ -76,7 +76,7 @@ A setting that something else controls, such as a theme fixed by managed setting
 
 ## Status panel
 
-In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). Every part of it is a card: a rounded border in the `toolBar` color with the card's title drawn in its top edge, one blank row between cards, labels in the `muted` color and values bold.
+In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). Every part of it is a card: a rounded border in the `toolBar` color with the card's title drawn in its top edge, the cards stacked with no blank row between them, labels in the `muted` color and values bold.
 
 - **✿ Status**: always first. The project's directory (your home written as `~`); inside a git work tree, `Branch` and, while there are uncommitted changes, `Changes`: how many files are changed or untracked, then the lines added (green) and deleted (the `error` color) in tracked files since the last commit (untracked files count as files, their lines are not counted). Under them, the rows of `~/.claude/statusline.sh`, each ` | ` separated part on its own row, leaving out the `5h:` and `7d:` parts and the context bar, which the ◷ Usage and ◔ Context cards replace. Git runs again when Claude Code gives the status line new input (after a turn, or in another directory) and otherwise every 15 seconds, so edits made outside the session show up too.
 

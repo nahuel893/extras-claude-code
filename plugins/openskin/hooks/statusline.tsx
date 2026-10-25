@@ -300,7 +300,7 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
   })
 
   // The Status card (the project, then the status line's parts, one row each), then a card per
-  // section that has something to show.
+  // section that has something to show, stacked with no blank row between them.
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Text } = $.ui.resolve(e)
     // The body less each card's border and padding on both sides.
@@ -373,7 +373,7 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     const fill = background === undefined ? {} : { backgroundColor: background, minHeight: e.props.scroll.bodyRows }
 
     return (
-      <Box flexDirection="column" gap={1} {...fill}>
+      <Box flexDirection="column" {...fill}>
         {card('✿ Status', status)}
         {sections.map(section => card(section.heading, section.rows.map(row => drawRow(row, section.wrap))))}
       </Box>
