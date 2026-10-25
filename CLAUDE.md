@@ -8,7 +8,7 @@ Claude Code mods (function-hooks plugins) published as one marketplace. Public r
 - `plugins/<mod>/`: one mod per folder. Each has `.claude-plugin/plugin.json`, `hooks/hooks.json` (exactly one module, usually `./register.tsx`), `hooks/*.tsx`, `tests/*.test.tsx`, `types/index.d.ts` when it keeps `$.state`, and a `README.md`.
 - `docs/notes/engine-gotchas.md`: what the mod engine does that is not obvious. Read it before touching render or loading code.
 - `odd/tasks/<feature>.md`: one ODD feature document per feature (objective, scope, checklist with task IDs, evidence, commits). `odd/handoff-*.md`: session handoffs with the state of work in flight.
-- `assets/`: README banner (`banner.png`, Cascadia Code on the Rose Pine palette) and screenshot.
+- `assets/`: README banner (`banner-v2.png` rendered from `banner.svg`, Cascadia Code on the Rose Pine palette) and screenshot.
 
 ## Mods
 

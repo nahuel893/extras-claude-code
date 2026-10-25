@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320">
   <!-- Rose Pine palette; text in Cascadia Code (installed as CaskaydiaCove Nerd Font). -->
-  <!-- Render: rsvg-convert -w 1280 -h 320 assets/banner.svg -o assets/banner.png -->
+  <!-- Render: rsvg-convert -w 1280 -h 320 assets/banner.svg -o assets/banner-v2.png -->
   <rect width="1280" height="320" fill="#191724"/>
   <path d="M56 40 H1225 Q1241 40 1241 56 V281 H40 V56 Q40 40 56 40 Z" fill="#1f1d2e"/>
   <text x="640" y="165" text-anchor="middle" font-family="CaskaydiaCove Nerd Font Mono, Cascadia Code, monospace" font-weight="700" font-size="78">

@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/banner.png" alt="refined-claude-code" width="100%"></p>
+<p align="center"><img src="assets/banner-v2.png" alt="refined-claude-code" width="100%"></p>
 
 # refined-claude-code
 
