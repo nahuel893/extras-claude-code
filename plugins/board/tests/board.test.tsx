@@ -6,7 +6,7 @@ import { boardLines, boardPath, slugOf, transcriptOf } from '../hooks/board'
 const USAGE = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 }
 
 /** This session's board, under its project and its id. */
-const BOARD = '/home/test/.cache/extras-claude-code/projects/-home-test-projects-app/session-1/board.md'
+const BOARD = '/home/test/.cache/refined-claude-code/projects/-home-test-projects-app/session-1/board.md'
 
 type World = {
   /** What the model answers: its text, or a reason it has none. */
@@ -67,7 +67,7 @@ const world = async ($: Engine, on: On, { reply = { text: '✓ Wrote the parser\
 test('the slug is the directory with every slash a dash, the board under it in a folder per session', async () => {
   expect(slugOf('/home/user/projects/x')).toBe('-home-user-projects-x')
   expect(boardPath('/home/user', '/home/user/projects/x', 'abc-123')).toBe(
-    '/home/user/.cache/extras-claude-code/projects/-home-user-projects-x/abc-123/board.md',
+    '/home/user/.cache/refined-claude-code/projects/-home-user-projects-x/abc-123/board.md',
   )
 })
 
@@ -114,8 +114,8 @@ test("this session's previous board goes to the model with the conversation", as
 test("a fresh session starts from an empty board: another session's board and the old project board are not read", async ($, on) => {
   const { asked, writes, board } = await world($, on, {
     files: {
-      '/home/test/.cache/extras-claude-code/projects/-home-test-projects-app/session-0/board.md': '○ Another session\n',
-      '/home/test/.cache/extras-claude-code/board/-home-test-projects-app.md': '○ The old project board\n',
+      '/home/test/.cache/refined-claude-code/projects/-home-test-projects-app/session-0/board.md': '○ Another session\n',
+      '/home/test/.cache/refined-claude-code/board/-home-test-projects-app.md': '○ The old project board\n',
     },
   })
   await board()

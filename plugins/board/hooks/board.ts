@@ -1,5 +1,5 @@
 /** Where the projects live under the home directory, a folder per session in each. */
-const PROJECTS = '.cache/extras-claude-code/projects'
+const PROJECTS = '.cache/refined-claude-code/projects'
 
 /** The marks a board line starts with: done, pending, waiting on the person's decision. */
 export const MARKS = ['✓ ', '○ ', '◇ '] as const

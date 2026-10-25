@@ -10,7 +10,7 @@ import type { Theme } from './theme'
  * Each file is polled on the status panel's timer, read again only when its mtime moves, and kept
  * in `$.state` for the panel to draw.
  */
-const PROJECTS = '.cache/extras-claude-code/projects'
+const PROJECTS = '.cache/refined-claude-code/projects'
 const MARKS = ['✓', '○', '◇']
 
 const board = atom({ plugin: 'openskin', key: 'board' } as const, [] as BoardLines)

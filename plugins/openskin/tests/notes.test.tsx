@@ -5,7 +5,7 @@ import { boardRow, notePaths } from '../hooks/notes'
 import { THEME_DEFAULTS } from '../hooks/theme'
 
 const HOME = '/home/test'
-const PROJECT = `${HOME}/.cache/extras-claude-code/projects/-home-test-projects-app`
+const PROJECT = `${HOME}/.cache/refined-claude-code/projects/-home-test-projects-app`
 const BOARD = `${PROJECT}/session-1/board.md`
 const SUMMARY = `${PROJECT}/session-1/summary.md`
 
@@ -100,8 +100,8 @@ test("another session's files and the old per-project and per-session files are 
   const { write } = world(on)
   write(`${PROJECT}/session-0/board.md`, '○ Another session\n')
   write(`${PROJECT}/session-0/summary.md`, 'Another session summary.\n')
-  write(`${HOME}/.cache/extras-claude-code/board/-home-test-projects-app.md`, '○ The old project board\n')
-  write(`${HOME}/.cache/extras-claude-code/summaries/session-1.md`, 'The old session summary.\n')
+  write(`${HOME}/.cache/refined-claude-code/board/-home-test-projects-app.md`, '○ The old project board\n')
+  write(`${HOME}/.cache/refined-claude-code/summaries/session-1.md`, 'The old session summary.\n')
   await startSession($)
 
   const all = await texts($)

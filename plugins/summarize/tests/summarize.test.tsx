@@ -61,7 +61,7 @@ const world = async ($: Engine, on: On, { reply = { text: 'The goal was a parser
 test("the summary file is in the session's folder, under the project's slug", async () => {
   expect(slugOf('/home/user/projects/x')).toBe('-home-user-projects-x')
   expect(summaryPath('/home/user', '/home/user/projects/x', 'abc-123')).toBe(
-    '/home/user/.cache/extras-claude-code/projects/-home-user-projects-x/abc-123/summary.md',
+    '/home/user/.cache/refined-claude-code/projects/-home-user-projects-x/abc-123/summary.md',
   )
 })
 
@@ -97,7 +97,7 @@ test('/summ answers at once, then writes the summary and says so', async ($, on)
   expect(asked[0]?.system).toContain('150 words')
   expect(writes).toEqual([
     {
-      path: '/home/test/.cache/extras-claude-code/projects/-home-test-projects-app/session-1/summary.md',
+      path: '/home/test/.cache/refined-claude-code/projects/-home-test-projects-app/session-1/summary.md',
       text: 'The goal was a parser. It is written.\n',
     },
   ])

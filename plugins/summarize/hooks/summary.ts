@@ -1,5 +1,5 @@
 /** Where the projects live under the home directory, a folder per session in each. */
-const PROJECTS = '.cache/extras-claude-code/projects'
+const PROJECTS = '.cache/refined-claude-code/projects'
 
 /** A project's name on disk: its directory with every `/` a `-`, as `-home-user-projects-x`. */
 export const slugOf = (cwd: string) => cwd.replace(/\//g, '-')
