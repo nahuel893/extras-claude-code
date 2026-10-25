@@ -141,21 +141,24 @@ export const outputLines = (stdout: string): StatusLines => {
   return lines
 }
 
-/** The status line's parts the Usage section replaces: its 5-hour and weekly windows. */
-const LIMIT_PART = /^(5h|7d):/
+/**
+ * The status line's parts the meter sections replace: its 5-hour and weekly windows
+ * (Usage) and its context bar, `██░░ 27% (…)` (Context).
+ */
+const REPLACED_PART = /^(5h|7d):|^[█░]+\s+\d+%/
 
 /** Text of a row with its escape codes gone. */
 const plain = (row: string) => parseAnsi(row).map(span => span.text).join('')
 
 /**
  * The panel's rows: one per part of the status line, as a sidebar reads (the script's ` | `
- * separators become line breaks), without the `5h:` and `7d:` parts.
+ * separators become line breaks), without the parts a meter section shows.
  */
 export const panelRows = (lines: StatusLines): string[] =>
   lines
     .flatMap(line => line.split(SEPARATOR))
     .map(row => row.trim())
-    .filter(row => row && !LIMIT_PART.test(plain(row).trim()))
+    .filter(row => row && !REPLACED_PART.test(plain(row).trim()))
 
 export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions) => {
   const thresholds = readThresholds(options)

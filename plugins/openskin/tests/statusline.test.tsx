@@ -50,6 +50,12 @@ test("the panel's rows leave out the status line's 5h and 7d parts, colored or n
   expect(panelRows(lines)).toEqual(['[Opus 5.5]', '🌿 main', '$1.20', '⏱ 3m'])
 })
 
+test("the panel's rows leave out the status line's context bar, which the Context section replaces", async () => {
+  const lines = ['\u001b[32m██░░░░░░░░\u001b[0m 27% (267159/1000000) | \u001b[33m$38.02\u001b[0m']
+
+  expect(panelRows(lines).map(row => parseAnsi(row).map(span => span.text).join(''))).toEqual(['$38.02'])
+})
+
 test('the panel draws the status line without its 5h and 7d parts', async ($, on) => {
   const clock = mock.clock(on, { now: 0 })
   on('env.get', () => ({ value: '/home/test' }))
