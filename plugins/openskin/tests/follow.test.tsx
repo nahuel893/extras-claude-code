@@ -18,7 +18,7 @@ const typed = (args: string) =>
 
 /** A settings file holding openskin's options under its installed id, and Claude Code's theme. */
 const settings = (options: Record<string, unknown>, theme = 'dark') =>
-  JSON.stringify({ theme, pluginConfigs: { 'openskin@extras-claude-code': { options } }, permissions: { allow: [] } }, null, 2)
+  JSON.stringify({ theme, pluginConfigs: { 'openskin@refined-claude-code': { options } }, permissions: { allow: [] } }, null, 2)
 
 /**
  * Everything beneath the mod: the clock, the home, the session id, a store, a file system in memory
@@ -70,7 +70,7 @@ function world(on: On, env: Record<string, string> = { HOME }) {
 const startSession = ($: Engine) => $.session.start({ cwd: '/project', surface: 'terminal', isInteractive: true })
 
 test("openskin's options are read from its installed id, whatever the marketplace", async () => {
-  expect(ownOptions({ pluginConfigs: { 'openskin@extras-claude-code': { options: { accent: '#fff' } } } })).toEqual({ accent: '#fff' })
+  expect(ownOptions({ pluginConfigs: { 'openskin@refined-claude-code': { options: { accent: '#fff' } } } })).toEqual({ accent: '#fff' })
   expect(ownOptions({ pluginConfigs: { openskin: { options: { accent: '#000' } } } })).toEqual({ accent: '#000' })
   expect(ownOptions({ pluginConfigs: { 'other@x': { options: { accent: '#000' } } } })).toBeUndefined()
   expect(ownOptions({})).toBeUndefined()
@@ -144,7 +144,7 @@ test('a file that is missing or not JSON (caught mid-write) changes nothing', { 
   await startSession($)
   await w.clock.advance(TICK * 2)
 
-  w.write(SETTINGS, '{ "pluginConfigs": { "openskin@extras-claude-code": { "options": { "accent": "#bb')
+  w.write(SETTINGS, '{ "pluginConfigs": { "openskin@refined-claude-code": { "options": { "accent": "#bb')
   await w.clock.advance(TICK * 4)
   expect(w.reloads).toEqual([])
 })
