@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320">
+  <!-- Rose Pine palette; text in Cascadia Code (installed as CaskaydiaCove Nerd Font). -->
+  <!-- Render: rsvg-convert -w 1280 -h 320 assets/banner.svg -o assets/banner.png -->
+  <rect width="1280" height="320" fill="#191724"/>
+  <path d="M56 40 H1225 Q1241 40 1241 56 V281 H40 V56 Q40 40 56 40 Z" fill="#1f1d2e"/>
+  <text x="640" y="165" text-anchor="middle" font-family="CaskaydiaCove Nerd Font Mono, Cascadia Code, monospace" font-weight="700" font-size="78">
+    <tspan fill="#eb6f92">&gt;</tspan><tspan dx="47" fill="#c4a7e7">refined-</tspan><tspan fill="#ebbcba">claude-</tspan><tspan fill="#9ccfd8">code</tspan>
+  </text>
+  <text x="640" y="211" text-anchor="middle" font-family="CaskaydiaCove Nerd Font Mono, Cascadia Code, monospace" font-size="30" fill="#908caa">mods that make the Claude Code terminal nicer to live in</text>
+  <rect x="40" y="268" width="200" height="13" fill="#eb6f92"/>
+  <rect x="240" y="268" width="200" height="13" fill="#f6c177"/>
+  <rect x="440" y="268" width="200" height="13" fill="#ebbcba"/>
+  <rect x="640" y="268" width="200" height="13" fill="#31748f"/>
+  <rect x="840" y="268" width="200" height="13" fill="#9ccfd8"/>
+  <rect x="1040" y="268" width="201" height="13" fill="#c4a7e7"/>
+</svg>
