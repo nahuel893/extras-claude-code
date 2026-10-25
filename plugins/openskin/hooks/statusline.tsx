@@ -5,7 +5,7 @@ import { countTurn, startTokenMeter, tokenSection } from './meters/tokens'
 import { measureUsage, startUsageMeter, stopUsageMeter, usageSection } from './meters/usage'
 import { boardSection, startNotes, summarySection } from './notes'
 import { GIT_EVERY, inputDir, projectStatus, shortHome, startProject } from './project'
-import type { Theme } from './theme'
+import { paint, type Theme } from './theme'
 import type { StatusLines } from '../types'
 
 /**
@@ -368,8 +368,12 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     status.push(...rows.map(row => drawRow(parseAnsi(row))))
     if (status.length === 0) status.push(<Text color={theme.muted}>Waiting for the status line…</Text>)
 
+    // `panelBackground` paints the whole body, at least as tall as the pane shows; `none` paints nothing.
+    const background = paint(theme.panelBackground)
+    const fill = background === undefined ? {} : { backgroundColor: background, minHeight: e.props.scroll.bodyRows }
+
     return (
-      <Box flexDirection="column" gap={1}>
+      <Box flexDirection="column" gap={1} {...fill}>
         {card('✿ Status', status)}
         {sections.map(section => card(section.heading, section.rows.map(row => drawRow(row, section.wrap))))}
       </Box>

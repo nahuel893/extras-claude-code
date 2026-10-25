@@ -10,7 +10,15 @@ export const THEME_DEFAULTS = {
   command: 'bashBorder',
   /** The band behind each reply; `none` draws it unpainted (see `paint`). */
   background: '#1c1c22',
+  /**
+   * Behind the whole status panel; `none` paints nothing, leaving what the engine draws there.
+   * The person's own, to match their terminal: `/skin` presets leave it as it is.
+   */
+  panelBackground: 'none',
 }
+
+/** The theme's colors a `/skin` preset leaves alone. */
+export const UNSKINNED = ['panelBackground'] as const
 
 export type Theme = typeof THEME_DEFAULTS
 

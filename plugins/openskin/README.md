@@ -50,6 +50,7 @@ Change them with `/plugin configure openskin@extras-claude-code`. A color is a h
 | `muted` | `#7f7f8a` | The footer's model and duration, and the text of error rows. |
 | `command` | `bashBorder` | The frame and label of shell commands. |
 | `background` | `#1c1c22` | The band behind Claude's replies; `none` draws no band. |
+| `panelBackground` | `none` | The background of the whole status panel, to match your terminal (`#000000` on a black one); `none` paints nothing and keeps what Claude Code draws there. `/skin` presets leave it as it is. |
 
 With `opencodeStyle` off and `commandFrames` on, Claude Code keeps its own transcript and only the commands are framed. With both off, the mod draws nothing.
 

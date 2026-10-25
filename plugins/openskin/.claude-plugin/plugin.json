@@ -74,6 +74,12 @@
       "title": "Reply background",
       "description": "The band drawn behind Claude's replies in the OpenCode look: a hex such as #1c1c22, a color name, a Claude Code theme key, or none for no background.",
       "default": "#1c1c22"
+    },
+    "panelBackground": {
+      "type": "string",
+      "title": "Status panel background",
+      "description": "The background of the whole status panel: a hex such as #000000, a color name, a Claude Code theme key, or none to paint nothing and keep what Claude Code draws there. /skin presets leave it as it is.",
+      "default": "none"
     }
   },
   "types": "./types/index.d.ts"

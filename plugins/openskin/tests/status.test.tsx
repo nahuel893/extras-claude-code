@@ -133,6 +133,26 @@ test('every section is a round card whose title sits on its top border', async (
   await ui.unmount()
 })
 
+test('panelBackground paints the whole panel body, at least as tall as the pane', { options: { panelBackground: '#000000' } }, async ($, on) => {
+  const { clock } = world(on)
+  await startSession($, clock)
+
+  const ui = await $.ui.mount(PANE)
+  expect((await ui.drawn()).props).toMatchObject({ backgroundColor: '#000000', minHeight: 30 })
+  await ui.unmount()
+})
+
+test('with panelBackground none, the default, the panel paints no background', async ($, on) => {
+  const { clock } = world(on)
+  await startSession($, clock)
+
+  const ui = await $.ui.mount(PANE)
+  const root = await ui.drawn()
+  expect(root.props).not.toHaveProperty('backgroundColor')
+  expect(root.props).not.toHaveProperty('minHeight')
+  await ui.unmount()
+})
+
 test('the Status card: project, branch and changes from git, then the status line rows', async ($, on) => {
   const { clock } = world(on)
   await startSession($, clock)

@@ -1,15 +1,17 @@
 import { expect, test } from 'claude-code/testing'
 import { PRESETS } from '../hooks/skin'
-import { THEME_DEFAULTS } from '../hooks/theme'
+import { THEME_DEFAULTS, UNSKINNED } from '../hooks/theme'
 
-const COLOR_FIELDS = Object.keys(THEME_DEFAULTS).sort()
+const COLOR_FIELDS = Object.keys(THEME_DEFAULTS)
+  .filter(field => !(UNSKINNED as readonly string[]).includes(field))
+  .sort()
 const NAMES = Object.keys(PRESETS)
 
 /** `/skin <args>` as the person types it at the prompt, the way the engine raises it. */
 const typed = (args: string) =>
   ({ command: 'skin', args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 100 } }) as const
 
-test('every preset sets every color option and a dark or light theme, and default is the manifest defaults', async () => {
+test('every preset sets every color option but the panel background, and a dark or light theme; default is the manifest defaults', async () => {
   expect(NAMES).toEqual([
     'default',
     'tokyonight',
@@ -28,7 +30,8 @@ test('every preset sets every color option and a dark or light theme, and defaul
     expect(['dark', 'light']).toContain(theme)
     expect(Object.keys(colors).sort()).toEqual(COLOR_FIELDS)
   }
-  expect(PRESETS.default).toEqual({ theme: 'dark', ...THEME_DEFAULTS })
+  const { panelBackground: _, ...skinned } = THEME_DEFAULTS
+  expect(PRESETS.default).toEqual({ theme: 'dark', ...skinned })
 })
 
 test('with the status panel off, /skin is registered at the start of an interactive session', { options: { statusPanel: false } }, async ($, on) => {

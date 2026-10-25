@@ -1,12 +1,17 @@
 import type { EngineInterface, On } from 'claude-code'
-import { THEME_DEFAULTS, type Theme } from './theme'
+import { THEME_DEFAULTS, type Theme, UNSKINNED } from './theme'
 
-/** A color preset: every openskin color option, plus Claude Code's own `theme` to match. */
-export type Preset = Theme & { theme: 'dark' | 'light' }
+/**
+ * A color preset: every openskin color option but those the person keeps whatever the preset
+ * (UNSKINNED), plus Claude Code's own `theme` to match.
+ */
+export type Preset = Omit<Theme, (typeof UNSKINNED)[number]> & { theme: 'dark' | 'light' }
+
+const { panelBackground: _, ...SKINNED_DEFAULTS } = THEME_DEFAULTS
 
 /** The presets `/skin` applies, in the order it lists them. */
 export const PRESETS: Record<string, Preset> = {
-  default: { theme: 'dark', ...THEME_DEFAULTS },
+  default: { theme: 'dark', ...SKINNED_DEFAULTS },
   tokyonight: { theme: 'dark', accent: '#bb9af7', surface: '#1f2335', toolBar: '#414868', error: '#f7768e', muted: '#737aa2', command: '#7dcfff', background: '#16161e' },
   'catppuccin-mocha': { theme: 'dark', accent: '#cba6f7', surface: '#313244', toolBar: '#585b70', error: '#f38ba8', muted: '#9399b2', command: '#94e2d5', background: '#181825' },
   'catppuccin-latte': { theme: 'light', accent: '#8839ef', surface: '#ccd0da', toolBar: '#acb0be', error: '#d20f39', muted: '#5c5f77', command: '#179299', background: '#e6e9ef' },
