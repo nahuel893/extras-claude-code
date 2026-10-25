@@ -1,5 +1,6 @@
 import type { EngineInterface, Register } from 'claude-code'
 import { boardLines, boardPath, promptOf, SYSTEM, transcriptOf } from './board'
+import { applyCall, TOOL_DESCRIPTION, TOOL_NAME, TOOL_SCHEMA } from './tool'
 
 const DEFAULT_MODEL = 'claude-haiku-5-5'
 
@@ -8,6 +9,34 @@ const TRANSCRIPT_CHARS = 60_000
 
 /** How long the model may take before the update gives up. */
 const TIMEOUT_MS = 120_000
+
+/** The board tool as the model calls it: `mcp__<plugin>__<name>`. */
+const TOOL = `mcp__board__${TOOL_NAME}`
+
+/** This session's board file, or why there is none. */
+async function sessionBoard($: EngineInterface): Promise<{ path: string } | { reason: string }> {
+  const home = await $.env.get('HOME')
+  if (!home) return { reason: 'HOME is not set' }
+  return { path: boardPath(home, await $.session.cwd(), await $.session.id()) }
+}
+
+/**
+ * Applies one board tool call to this session's board file and answers the line the model reads.
+ * A call that cannot apply writes nothing; a failure is a reply too, never a throw.
+ */
+async function callTool($: EngineInterface, input: Record<string, unknown>): Promise<string> {
+  try {
+    const board = await sessionBoard($)
+    if ('reason' in board) return `Board not changed: ${board.reason}`
+
+    const previous = await $.fs.read(board.path).catch(() => '')
+    const { board: next, reply } = applyCall(previous, input)
+    if (next !== undefined) await $.fs.write(board.path, next)
+    return reply
+  } catch (error) {
+    return `Board not changed: ${error instanceof Error ? error.message : String(error)}`
+  }
+}
 
 /**
  * Rewrites this session's board: the conversation and the session's previous board to the model,
@@ -23,12 +52,12 @@ async function updateBoard($: EngineInterface, model: string) {
       return
     }
 
-    const home = await $.env.get('HOME')
-    if (!home) {
-      $.ui.toast('Board not updated: HOME is not set')
+    const board = await sessionBoard($)
+    if ('reason' in board) {
+      $.ui.toast(`Board not updated: ${board.reason}`)
       return
     }
-    const path = boardPath(home, await $.session.cwd(), await $.session.id())
+    const { path } = board
     const previous = await $.fs.read(path).catch(() => '')
 
     const reply = await $.model.complete({ model, system: SYSTEM, prompt: promptOf(previous, transcript), timeoutMs: TIMEOUT_MS })
@@ -60,6 +89,7 @@ export const register: Register = (on, options) => {
       name: 'board',
       description: "Update this session's board of done, pending and waiting items from the conversation",
     })
+    await $.tool.register({ name: TOOL_NAME, description: TOOL_DESCRIPTION, inputSchema: TOOL_SCHEMA })
 
     return next(e)
   })
@@ -78,4 +108,7 @@ export const register: Register = (on, options) => {
 
     return { text: 'Updating the board…' }
   })
+
+  // The model's arguments ride beside the call's own keys; the tool reads only its own three.
+  on('tool.call', { tool: TOOL }, async ($, e) => ({ result: await callTool($, e as Record<string, unknown>) }))
 }
