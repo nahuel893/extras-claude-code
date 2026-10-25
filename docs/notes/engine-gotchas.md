@@ -25,7 +25,10 @@ What building these mods taught about the Claude Code mod engine. Each item cost
 - Background work goes on `$.clock.after(0)` from `command.run`, so the command answers at once.
 - `$.fs.write` creates parent directories.
 - `$.config.set({ key, value })` reloads the module with the new options.
-- Sessions that are already open do not re-read plugin options edited in `settings.json` from outside; `/reload-plugins` applies them.
+- A session follows outside edits of `settings.json`, through a symlink too, and reloads plugins whose options changed. But a session started while the file was a regular file stops seeing edits once it is replaced by a symlink.
+- In such a stale session, `$.config.set` writes the session's whole stale copy of the settings back to disk, reverting newer outside edits.
+- `/reload-plugins` re-reads the settings without writing anything. A mod can trigger it with `$.command.run({ command: 'reload-plugins' })`, but not from inside its own `command.run` hook: schedule it with `$.clock.after`.
+- Several `$.config.set` calls in a row from one command hook all finish before the engine reloads the module.
 
 ## Tests
 
