@@ -15,6 +15,12 @@
       "description": "Frame the shell commands in Claude's replies and ask Claude to tag every command fence with its shell. Off leaves commands as plain code blocks.",
       "default": true
     },
+    "statusPanel": {
+      "type": "boolean",
+      "title": "Status line band",
+      "description": "Redraw your status line script's output in a band above the prompt, refreshed when Claude Code runs the script. Off leaves the band to Claude Code.",
+      "default": true
+    },
     "accent": {
       "type": "string",
       "title": "Accent color",
@@ -57,5 +63,6 @@
       "description": "The band drawn behind Claude's replies in the OpenCode look: a hex such as #1c1c22, a color name, a Claude Code theme key, or none for no background.",
       "default": "#1c1c22"
     }
-  }
+  },
+  "types": "./types/index.d.ts"
 }

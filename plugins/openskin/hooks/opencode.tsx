@@ -41,14 +41,14 @@ export const formatDuration = (ms: number): string => {
   return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
 }
 
-type Ui = Pick<Elements['terminal'], 'Box' | 'Text' | 'Markdown' | 'Code'>
+export type Ui = Pick<Elements['terminal'], 'Box' | 'Text' | 'Markdown' | 'Code'>
 
 /**
  * `above`: clear rows over the block, outside it. Every piece (block, reply, footer) keeps
  * its gap above itself and none below, so any two neighbours sit exactly one row apart.
  * `top`, `bottom`: rows of air inside the block, on its surface.
  */
-type Air = { above: number; top: number; bottom: number }
+export type Air = { above: number; top: number; bottom: number }
 
 /** Columns kept clear on both sides of the window, so nothing touches its edges. */
 const GUTTER = 2
@@ -60,7 +60,7 @@ const TEXT_INDENT = GUTTER + 1 + 2
  * A full-width block: a one-column bar in `bar` down the left edge (it stretches to
  * the block's height) and the content on the theme's surface, `air` rows above and below.
  */
-const drawBlock = ({ Box }: Pick<Ui, 'Box'>, theme: Theme, bar: string, air: Air, content: RenderChildren) => (
+export const drawBlock = ({ Box }: Pick<Ui, 'Box'>, theme: Theme, bar: string, air: Air, content: RenderChildren) => (
   <Box flexDirection="row" alignItems="stretch" marginX={GUTTER} marginTop={air.above}>
     <Box width={1} flexShrink={0} backgroundColor={bar} />
     <Box

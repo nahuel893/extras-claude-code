@@ -1,10 +1,12 @@
 import type { Register } from 'claude-code'
 import { drawFramedCommands, SHELL_FENCE_RULE, splitCommands, type Segment } from './commands'
 import { drawReply, drawSummary, registerOpencode } from './opencode'
+import { registerStatusPanel } from './statusline'
 import { readSwitches, readTheme } from './theme'
 
 export { splitCommands } from './commands'
 export { formatDuration, formatModel } from './opencode'
+export { color256, outputLines, parseAnsi } from './statusline'
 
 /** A reply kept whole, its shell blocks left in the markdown, for when commands are not framed. */
 const asProse = (text: string): Segment[] => (text.trim() ? [{ kind: 'prose', text: text.trim() }] : [])
@@ -22,6 +24,9 @@ export const register: Register = (on, options) => {
   }
 
   if (opencodeStyle) registerOpencode(on, theme)
+
+  // The status band above the prompt has its own switch, on unless explicitly false.
+  if (options.statusPanel !== false) registerStatusPanel(on, theme)
 
   // With both parts off the engine draws every reply as it would without the mod.
   if (!opencodeStyle && !commandFrames) return
