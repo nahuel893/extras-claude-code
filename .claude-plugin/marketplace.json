@@ -1,0 +1,12 @@
+{
+  "name": "openskin",
+  "owner": { "name": "nahuel893" },
+  "plugins": [
+    {
+      "name": "openskin",
+      "source": "./",
+      "description": "An OpenCode-style look for the Claude Code transcript, with framed shell commands; every color configurable.",
+      "category": "productivity"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "name": "openskin",
+  "version": "0.5.0",
+  "description": "An OpenCode-style transcript: prompts, tool calls and errors in barred blocks, Claude's replies on a background band with framed shell commands, and a '▣ Claude · model · duration' footer under each turn. The look and the command frames each have a switch; every color is an option.",
+  "userConfig": {
+    "opencodeStyle": {
+      "type": "boolean",
+      "title": "OpenCode look",
+      "description": "Draw prompts, tool calls and errors as barred blocks, Claude's replies on a background band, and the '▣ Claude · model · duration' footer. Off keeps Claude Code's own transcript.",
+      "default": true
+    },
+    "commandFrames": {
+      "type": "boolean",
+      "title": "Shell command frames",
+      "description": "Frame the shell commands in Claude's replies and ask Claude to tag every command fence with its shell. Off leaves commands as plain code blocks.",
+      "default": true
+    },
+    "accent": {
+      "type": "string",
+      "title": "Accent color",
+      "description": "The bar beside your prompts and the square in the turn footer: a hex such as #f0a6ec, a color name, or a Claude Code theme key.",
+      "default": "#f0a6ec"
+    },
+    "surface": {
+      "type": "string",
+      "title": "Block background",
+      "description": "The background of the prompt, tool and error blocks: a hex such as #24242c, a color name, or a Claude Code theme key.",
+      "default": "#24242c"
+    },
+    "toolBar": {
+      "type": "string",
+      "title": "Tool bar color",
+      "description": "The bar beside tool calls and their results: a hex such as #55555f, a color name, or a Claude Code theme key.",
+      "default": "#55555f"
+    },
+    "error": {
+      "type": "string",
+      "title": "Error bar color",
+      "description": "The bar beside error rows: a hex such as #ff6b5b, a color name, or a Claude Code theme key.",
+      "default": "#ff6b5b"
+    },
+    "muted": {
+      "type": "string",
+      "title": "Muted text color",
+      "description": "The model and duration in the turn footer, and the text of error rows: a hex such as #7f7f8a, a color name, or a Claude Code theme key.",
+      "default": "#7f7f8a"
+    },
+    "command": {
+      "type": "string",
+      "title": "Shell command frame color",
+      "description": "The frame and label of the shell commands in Claude's replies: a hex such as #f0a6ec, a color name, or a Claude Code theme key such as bashBorder.",
+      "default": "bashBorder"
+    },
+    "background": {
+      "type": "string",
+      "title": "Reply background",
+      "description": "The band drawn behind Claude's replies in the OpenCode look: a hex such as #1c1c22, a color name, a Claude Code theme key, or none for no background.",
+      "default": "#1c1c22"
+    }
+  }
+}
