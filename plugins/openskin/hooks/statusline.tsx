@@ -312,7 +312,7 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
       projectStatus($),
       contextSection($, thresholds, theme),
       tokenSection($),
-      usageSection($, columns),
+      usageSection($, columns, theme),
       boardSection($, theme),
       summarySection($),
     ])

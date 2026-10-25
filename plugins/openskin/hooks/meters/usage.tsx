@@ -11,6 +11,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, SessionRateLimit } from 'claude-code'
 import type { Limit } from '../../types'
 import type { Section, Span } from '../statusline'
+import type { Theme } from '../theme'
 
 const limits = atom({ plugin: 'openskin', key: 'usageLimits' } as const, [] as Limit[])
 const tick = atom({ plugin: 'openskin', key: 'usageTick' } as const, 0) // redraws the countdown
@@ -32,8 +33,9 @@ export const windowsOf = (rateLimits: readonly SessionRateLimit[]): Limit[] =>
 /** Columns a text takes: one per character, none for a variation selector. */
 const widthOf = (text: string) => [...text.replace(/[︎️]/g, '')].length
 
-/** Claude orange, yellow from 75%, red from 90%. */
-export const usageColor = (percent: number) => (percent >= 90 ? 'error' : percent >= 75 ? 'warning' : 'claude')
+/** The theme's accent, yellow from 75%, the theme's error color from 90%. */
+export const usageColor = (percent: number, theme: Theme) =>
+  percent >= 90 ? theme.error : percent >= 75 ? 'warning' : theme.accent
 
 /** "42m", "3h 5m", "2d 4h": how long until the window resets. */
 export const until = (ms: number) => {
@@ -48,10 +50,10 @@ const labelOf = (limit: Limit) => LABELS[limit.kind] ?? limit.kind
 
 /**
  * One window as a row of `columns` at most: its label padded to `labelWidth`, a bar of ten
- * cells, the percentage used and the time until it resets. Where the row is short it gives up
- * the bar, then the reset time. A window past its reset reads 0%.
+ * cells in the theme's colors, the percentage used and the time until it resets. Where the row
+ * is short it gives up the bar, then the reset time. A window past its reset reads 0%.
  */
-export const usageRow = (limit: Limit, now: number, columns: number, labelWidth: number): Span[] => {
+export const usageRow = (limit: Limit, now: number, columns: number, labelWidth: number, theme: Theme): Span[] => {
   const resetsIn = limit.resetsAt === undefined ? undefined : Date.parse(limit.resetsAt) - now
   const hasReset = resetsIn !== undefined && resetsIn <= 0
   const percent = hasReset ? 0 : limit.percentUsed
@@ -70,8 +72,8 @@ export const usageRow = (limit: Limit, now: number, columns: number, labelWidth:
     { text: label, dimColor: true },
     ...(fit.hasBar
       ? [
-          { text: ' ' + '━'.repeat(filled), color: usageColor(percent) },
-          { text: '─'.repeat(CELLS - filled), dimColor: true },
+          { text: ' ' + '━'.repeat(filled), color: usageColor(percent, theme) },
+          { text: '─'.repeat(CELLS - filled), color: theme.muted },
         ]
       : []),
     { text: used },
@@ -146,12 +148,12 @@ export async function measureUsage($: EngineInterface, rateLimits: readonly Sess
 }
 
 /** The Usage section of the panel, its rows `columns` wide at most; nothing off a subscription. */
-export async function usageSection($: EngineInterface, columns: number): Promise<Section | null> {
+export async function usageSection($: EngineInterface, columns: number, theme: Theme): Promise<Section | null> {
   const all = await read($, limits)
   if (all.length === 0) return null
   // Reading the tick subscribes the panel to the countdown.
   const [, now] = await Promise.all([read($, tick), $.clock.now()])
   const labelWidth = Math.max(...all.map(limit => widthOf(labelOf(limit))))
 
-  return { heading: '◷ Usage', rows: all.map(limit => usageRow(limit, now, columns, labelWidth)) }
+  return { heading: '◷ Usage', rows: all.map(limit => usageRow(limit, now, columns, labelWidth, theme)) }
 }

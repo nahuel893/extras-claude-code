@@ -117,10 +117,10 @@ test('the time until a window resets: minutes, hours and minutes, days and hours
   expect(until(52 * HOUR)).toBe('2d 4h')
 })
 
-test('a window is Claude orange, yellow from 75%, red from 90%', async () => {
-  expect(usageColor(74)).toBe('claude')
-  expect(usageColor(75)).toBe('warning')
-  expect(usageColor(90)).toBe('error')
+test('a window is the theme accent, yellow from 75%, the theme error color from 90%', async () => {
+  expect(usageColor(74, T)).toBe(T.accent)
+  expect(usageColor(75, T)).toBe('warning')
+  expect(usageColor(90, T)).toBe(T.error)
 })
 
 test('only the 5-hour and weekly windows count, in that order', async () => {
@@ -129,23 +129,23 @@ test('only the 5-hour and weekly windows count, in that order', async () => {
 })
 
 test('a usage row: label, a bar of ten cells, the percentage and the time to reset', async () => {
-  expect(usageRow(LIMITS[0]!, NOW, 40, 4)).toEqual([
+  expect(usageRow(LIMITS[0]!, NOW, 40, 4, T)).toEqual([
     { text: '5h  ', dimColor: true },
-    { text: ' ━━━━━━', color: 'claude' },
-    { text: '────', dimColor: true },
+    { text: ' ━━━━━━', color: T.accent },
+    { text: '────', color: T.muted },
     { text: ' 58%' },
     { text: ' ↻ 2h 10m', dimColor: true },
   ])
-  expect(usageRow(LIMITS[1]!, NOW, 40, 4).map(span => span.text)).toEqual(['week', ' ━━', '────────', ' 24%', ' ↻ 3d 4h'])
+  expect(usageRow(LIMITS[1]!, NOW, 40, 4, T).map(span => span.text)).toEqual(['week', ' ━━', '────────', ' 24%', ' ↻ 3d 4h'])
 })
 
 test('a narrow row gives up its bar first, then the reset time', async () => {
-  expect(usageRow(LIMITS[0]!, NOW, 20, 4).map(span => span.text)).toEqual(['5h  ', ' 58%', ' ↻ 2h 10m'])
-  expect(usageRow(LIMITS[0]!, NOW, 10, 4).map(span => span.text)).toEqual(['5h  ', ' 58%'])
+  expect(usageRow(LIMITS[0]!, NOW, 20, 4, T).map(span => span.text)).toEqual(['5h  ', ' 58%', ' ↻ 2h 10m'])
+  expect(usageRow(LIMITS[0]!, NOW, 10, 4, T).map(span => span.text)).toEqual(['5h  ', ' 58%'])
 })
 
 test('a window past its reset reads 0% with no countdown', async () => {
-  expect(usageRow({ ...LIMITS[0]!, resetsAt: at(-1000) }, NOW, 40, 4).map(span => span.text)).toEqual([
+  expect(usageRow({ ...LIMITS[0]!, resetsAt: at(-1000) }, NOW, 40, 4, T).map(span => span.text)).toEqual([
     '5h  ',
     ' ',
     '──────────',
@@ -288,7 +288,7 @@ test('the usage section takes the rate limits each response measures', async ($,
 
   const ui = await $.ui.mount(PANE)
   expect(await ui.find({ type: 'Text', text: ' 91%' })).toBeDefined()
-  expect((await span(ui, ' ━━━━━━━━━'))?.props.color).toBe('error')
+  expect((await span(ui, ' ━━━━━━━━━'))?.props.color).toBe(THEME_DEFAULTS.error)
   await ui.unmount()
 })
 
