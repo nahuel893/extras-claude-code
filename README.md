@@ -11,7 +11,7 @@
 
 <sub>Keywords: Claude Code theme, Claude Code UI, Claude Code plugins, Claude Code mods, TUI customization, terminal theme, status panel, sidebar, dashboard, color schemes, dark theme, OpenCode look.</sub>
 
-![openskin's status panel docked beside a session](assets/screenshot.jpeg)
+![openskin's status panel docked beside a session](assets/screenshot-v2.png)
 
 ## The mods
 
