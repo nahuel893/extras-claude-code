@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/banner.png" alt="extras-claude-code" width="100%"></p>
+
 # extras-claude-code
 
 Mods for [Claude Code](https://claude.com/claude-code) that make its terminal interface nicer to live in. Each one installs on its own.
