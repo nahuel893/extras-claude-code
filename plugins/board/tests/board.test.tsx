@@ -61,8 +61,8 @@ const world = async ($: Engine, on: On, { reply = { text: '✓ Wrote the parser\
 }
 
 test('the slug is the directory with every slash a dash', async () => {
-  expect(slugOf('/home/nh/projects/x')).toBe('-home-nh-projects-x')
-  expect(boardPath('/home/nh', '/home/nh/projects/x')).toBe('/home/nh/.cache/extras-claude-code/board/-home-nh-projects-x.md')
+  expect(slugOf('/home/user/projects/x')).toBe('-home-user-projects-x')
+  expect(boardPath('/home/user', '/home/user/projects/x')).toBe('/home/user/.cache/extras-claude-code/board/-home-user-projects-x.md')
 })
 
 test("only the board's lines are kept, bullets before a mark dropped", async () => {

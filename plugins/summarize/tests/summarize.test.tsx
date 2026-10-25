@@ -58,7 +58,7 @@ const world = async ($: Engine, on: On, { reply = { text: 'The goal was a parser
 }
 
 test('the summary file is named after the session id', async () => {
-  expect(summaryPath('/home/nh', 'abc-123')).toBe('/home/nh/.cache/extras-claude-code/summaries/abc-123.md')
+  expect(summaryPath('/home/user', 'abc-123')).toBe('/home/user/.cache/extras-claude-code/summaries/abc-123.md')
 })
 
 test("the summary is the model's reply trimmed, a leading heading dropped", async () => {

@@ -52,7 +52,7 @@ One file per project, keyed by the session's working directory with every `/` tu
 ~/.cache/extras-claude-code/board/<slug>.md
 ```
 
-For a session in `/home/nh/projects/app` that is `~/.cache/extras-claude-code/board/-home-nh-projects-app.md`.
+For a session in `/home/user/projects/app` that is `~/.cache/extras-claude-code/board/-home-user-projects-app.md`.
 Every session in the same directory shares the board, so it carries over from one session to the
 next. The [openskin](../openskin) mod shows it in its status panel.
 

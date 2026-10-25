@@ -4,7 +4,7 @@ const BOARDS = '.cache/extras-claude-code/board'
 /** The marks a board line starts with: done, pending, waiting on the person's decision. */
 export const MARKS = ['✓ ', '○ ', '◇ '] as const
 
-/** A project's name on disk: its directory with every `/` a `-`, as `-home-nh-projects-x`. */
+/** A project's name on disk: its directory with every `/` a `-`, as `-home-user-projects-x`. */
 export const slugOf = (cwd: string) => cwd.replace(/\//g, '-')
 
 /** The board file of the project in `cwd`. */
