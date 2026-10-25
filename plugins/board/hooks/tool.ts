@@ -39,8 +39,15 @@ export const hintOf = (tool: string) =>
 /** The one line that reminds the model of pending items it has not touched for a while. */
 export const reminderOf = (pending: number) => `Board: ${pending} pending. Mark finished items done with the board tool.`
 
-/** The numbered board handed to the model once after it changed outside the tool. */
-export const changedOf = (lines: readonly string[]) => `The board changed outside the board tool. Current items:\n${numbered(lines)}`
+/**
+ * The numbered board handed to the model once after it changed outside the tool: rewritten by
+ * `/board`, or edited by hand.
+ */
+export const changedOf = (lines: readonly string[], isRewrite = false) =>
+  `${isRewrite ? 'The board was rewritten by /board.' : 'The board changed outside the board tool.'} Current items:\n${numbered(lines)}`
+
+/** The reply to a call that waited for `/board` as long as a hook may, and wrote nothing. */
+export const BUSY = '/board is rewriting the board, call again shortly.'
 
 /** How many items are still pending. */
 export const pendingOf = (lines: readonly string[]) => lines.filter(line => line.startsWith(PENDING)).length

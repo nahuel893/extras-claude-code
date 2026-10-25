@@ -28,8 +28,11 @@ const world = async ($: Engine, on: On, files: Record<string, string> = {}) => {
     registered.push(e)
     return { value: { tool: `mcp__board__${e.name}` } }
   })
+  on('classic.UserPromptSubmit', () => ({}))
   on('session.start', ($, e) => ({ cwd: e.cwd }))
   await $.session.start({ cwd: '/home/test/projects/app', surface: 'terminal', isInteractive: true })
+  // The first prompt lists a board already on disk, so Claude knows its numbers.
+  await $.classic.UserPromptSubmit({ prompt: 'Go on.' })
 
   return {
     files,
@@ -83,4 +86,15 @@ test('a bad number, empty text or unknown action replies with a short message an
   expect(await call({ action: 'add', text: '   ' })).toBe("Give the item's text to add.")
   expect(await call({ action: 'drop', item: 1 })).toBe('Unknown action drop: use add, done or wait.')
   expect(writes).toEqual([])
+})
+
+test('a board edited by hand since Claude last saw it refuses done with the current list, then applies', async ($, on) => {
+  const { files, call } = await world($, on, { [BOARD]: '○ Write the parser\n' })
+  files[BOARD] = '○ Add tests\n○ Write the parser\n'
+
+  expect(await call({ action: 'done', item: 1 })).toBe(
+    'The board changed outside the board tool. Current items:\n1. ○ Add tests\n2. ○ Write the parser\nCall again.',
+  )
+  expect(await call({ action: 'done', item: 2 })).toBe('ok · 1 of 2 done')
+  expect(files[BOARD]).toBe('○ Add tests\n✓ Write the parser\n')
 })
