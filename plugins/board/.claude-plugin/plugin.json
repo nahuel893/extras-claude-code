@@ -1,7 +1,7 @@
 {
   "name": "board",
-  "version": "0.1.0",
-  "description": "A living board per project: /board asks a model to rewrite the list of what is done, what is pending and what waits on your decision from this session's conversation, and keeps it in a file.",
+  "version": "0.2.0",
+  "description": "A living board per session: /board asks a model to rewrite the list of what is done, what is pending and what waits on your decision from this session's conversation, and keeps it in a file under the project.",
   "author": { "name": "nahuel893" },
   "userConfig": {
     "model": {

@@ -2,7 +2,7 @@
   "name": "extras-claude-code",
   "owner": { "name": "nahuel893", "url": "https://github.com/nahuel893" },
   "metadata": {
-    "description": "Claude Code mods by nahuel893: openskin, an OpenCode-style look for the transcript; command-register, copy the shell commands Claude gives from a numbered list; board, a done, pending and waiting list per project; summarize, a short summary of the session on demand."
+    "description": "Claude Code mods by nahuel893: openskin, an OpenCode-style look for the transcript; command-register, copy the shell commands Claude gives from a numbered list; board, a done, pending and waiting list per session; summarize, a short summary of the session on demand."
   },
   "plugins": [
     {
@@ -22,8 +22,8 @@
     {
       "name": "board",
       "source": "./plugins/board",
-      "description": "A living board per project: /board rewrites the list of what is done, pending and waiting on your decision from the conversation.",
-      "version": "0.1.0",
+      "description": "A living board per session: /board rewrites the list of what is done, pending and waiting on your decision from the conversation.",
+      "version": "0.2.0",
       "category": "productivity"
     },
     {

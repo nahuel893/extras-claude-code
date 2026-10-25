@@ -5,25 +5,29 @@ import { boardLines, boardPath, slugOf, transcriptOf } from '../hooks/board'
 
 const USAGE = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 }
 
+/** This session's board, under its project and its id. */
+const BOARD = '/home/test/.cache/extras-claude-code/projects/-home-test-projects-app/session-1/board.md'
+
 type World = {
   /** What the model answers: its text, or a reason it has none. */
   reply?: { text: string } | { reason: 'api-error' | 'empty-reply' | 'aborted' }
-  /** The board file already there, if any. */
-  previous?: string
+  /** The files already on disk, by path: this session's board, another session's, an old one. */
+  files?: Record<string, string>
   messages?: { role: 'user' | 'assistant'; text: string }[]
 }
 
 /**
- * Stands in for the engine beneath the mod: the session's home, directory and conversation, the
+ * Stands in for the engine beneath the mod: the session's home, directory, id and conversation, the
  * model, the file system and the toasts, each recorded so a test reads what `/board` did.
  */
-const world = async ($: Engine, on: On, { reply = { text: '✓ Wrote the parser\n○ Add tests' }, previous, messages }: World = {}) => {
+const world = async ($: Engine, on: On, { reply = { text: '✓ Wrote the parser\n○ Add tests' }, files = {}, messages }: World = {}) => {
   const clock = mock.clock(on, { now: 0 })
   const asked: { model: string; prompt: string; system?: string }[] = []
   const writes: { path: string; text: string }[] = []
   const toasts: string[] = []
   on('env.get', () => ({ value: '/home/test' }))
   on('session.cwd', () => ({ value: '/home/test/projects/app' }))
+  on('session.id', () => ({ value: 'session-1' }))
   on('session.messages', () => ({
     value: (messages ?? [
       { role: 'user', text: 'Write the parser, then add tests.' },
@@ -34,7 +38,7 @@ const world = async ($: Engine, on: On, { reply = { text: '✓ Wrote the parser\
     asked.push({ model: e.model, prompt: e.prompt, ...(e.system === undefined ? {} : { system: e.system }) })
     return { value: ('text' in reply ? { isAnswered: true, text: reply.text, usage: USAGE } : { isAnswered: false, reason: reply.reason, status: 500, error: 'server_error', usage: USAGE }) as never }
   })
-  on('fs.read', ($, e) => (previous === undefined ? { deny: `ENOENT: ${e.path}` } : { value: previous }))
+  on('fs.read', ($, e) => (e.path in files ? { value: files[e.path] as string } : { deny: `ENOENT: ${e.path}` }))
   on('fs.write', ($, e) => {
     writes.push({ path: e.path, text: e.text })
     return { value: undefined }
@@ -60,9 +64,11 @@ const world = async ($: Engine, on: On, { reply = { text: '✓ Wrote the parser\
   }
 }
 
-test('the slug is the directory with every slash a dash', async () => {
+test('the slug is the directory with every slash a dash, the board under it in a folder per session', async () => {
   expect(slugOf('/home/user/projects/x')).toBe('-home-user-projects-x')
-  expect(boardPath('/home/user', '/home/user/projects/x')).toBe('/home/user/.cache/extras-claude-code/board/-home-user-projects-x.md')
+  expect(boardPath('/home/user', '/home/user/projects/x', 'abc-123')).toBe(
+    '/home/user/.cache/extras-claude-code/projects/-home-user-projects-x/abc-123/board.md',
+  )
 })
 
 test("only the board's lines are kept, bullets before a mark dropped", async () => {
@@ -94,17 +100,30 @@ test('/board answers at once, then writes the board and says so', async ($, on) 
   expect(asked[0]?.model).toBe('claude-haiku-5-5')
   expect(asked[0]?.prompt).toContain('User: Write the parser, then add tests.')
   expect(asked[0]?.system).toContain('◇ ')
-  expect(writes).toEqual([
-    { path: '/home/test/.cache/extras-claude-code/board/-home-test-projects-app.md', text: '✓ Wrote the parser\n○ Add tests\n' },
-  ])
+  expect(writes).toEqual([{ path: BOARD, text: '✓ Wrote the parser\n○ Add tests\n' }])
   expect(toasts).toEqual(['Board updated'])
 })
 
-test('the previous board goes to the model with the conversation', async ($, on) => {
-  const { asked, board } = await world($, on, { previous: '○ Write the parser\n' })
+test("this session's previous board goes to the model with the conversation", async ($, on) => {
+  const { asked, board } = await world($, on, { files: { [BOARD]: '○ Write the parser\n' } })
   await board()
 
   expect(asked[0]?.prompt).toContain('○ Write the parser')
+})
+
+test("a fresh session starts from an empty board: another session's board and the old project board are not read", async ($, on) => {
+  const { asked, writes, board } = await world($, on, {
+    files: {
+      '/home/test/.cache/extras-claude-code/projects/-home-test-projects-app/session-0/board.md': '○ Another session\n',
+      '/home/test/.cache/extras-claude-code/board/-home-test-projects-app.md': '○ The old project board\n',
+    },
+  })
+  await board()
+
+  expect(asked[0]?.prompt).toContain('<previous_board>\n(none)\n</previous_board>')
+  expect(asked[0]?.prompt).not.toContain('Another session')
+  expect(asked[0]?.prompt).not.toContain('The old project board')
+  expect(writes.map(write => write.path)).toEqual([BOARD])
 })
 
 test('the model option picks the model', { options: { model: 'haiku' } }, async ($, on) => {

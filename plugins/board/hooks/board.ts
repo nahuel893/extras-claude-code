@@ -1,5 +1,5 @@
-/** Where the boards live under the home directory, one file per project. */
-const BOARDS = '.cache/extras-claude-code/board'
+/** Where the projects live under the home directory, a folder per session in each. */
+const PROJECTS = '.cache/extras-claude-code/projects'
 
 /** The marks a board line starts with: done, pending, waiting on the person's decision. */
 export const MARKS = ['✓ ', '○ ', '◇ '] as const
@@ -7,8 +7,8 @@ export const MARKS = ['✓ ', '○ ', '◇ '] as const
 /** A project's name on disk: its directory with every `/` a `-`, as `-home-user-projects-x`. */
 export const slugOf = (cwd: string) => cwd.replace(/\//g, '-')
 
-/** The board file of the project in `cwd`. */
-export const boardPath = (home: string, cwd: string) => `${home}/${BOARDS}/${slugOf(cwd)}.md`
+/** The board file of session `id`, in the folder of the project in `cwd`. */
+export const boardPath = (home: string, cwd: string, id: string) => `${home}/${PROJECTS}/${slugOf(cwd)}/${id}/board.md`
 
 /**
  * The board's lines out of the model's reply: each trimmed, a list bullet before the mark dropped,
@@ -35,7 +35,7 @@ export const transcriptOf = (messages: readonly { role: 'user' | 'assistant'; te
 }
 
 export const SYSTEM = [
-  'You keep a project board: a short list of what is done, what is pending and what waits on the user.',
+  'You keep a session board: a short list of what is done, what is pending and what waits on the user.',
   'You are given the previous board, if any, and the latest part of a conversation between the user and a coding assistant.',
   'Write the updated board. One item per line, each line starting with exactly one of these marks and a space:',
   '"✓ " for done, "○ " for pending, "◇ " for waiting on the user\'s decision.',

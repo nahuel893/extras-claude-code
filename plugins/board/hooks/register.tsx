@@ -10,9 +10,10 @@ const TRANSCRIPT_CHARS = 60_000
 const TIMEOUT_MS = 120_000
 
 /**
- * Rewrites the board of this session's project: the conversation and the previous board to the
- * model, its reply cleaned to board lines and written to the project's file. Every outcome is a
- * toast, as nobody waits on the command's line by then.
+ * Rewrites this session's board: the conversation and the session's previous board to the model,
+ * its reply cleaned to board lines and written to the session's file under its project. A new
+ * session has no file yet, so it starts from an empty board. Every outcome is a toast, as nobody
+ * waits on the command's line by then.
  */
 async function updateBoard($: EngineInterface, model: string) {
   try {
@@ -27,7 +28,7 @@ async function updateBoard($: EngineInterface, model: string) {
       $.ui.toast('Board not updated: HOME is not set')
       return
     }
-    const path = boardPath(home, await $.session.cwd())
+    const path = boardPath(home, await $.session.cwd(), await $.session.id())
     const previous = await $.fs.read(path).catch(() => '')
 
     const reply = await $.model.complete({ model, system: SYSTEM, prompt: promptOf(previous, transcript), timeoutMs: TIMEOUT_MS })
@@ -57,7 +58,7 @@ export const register: Register = (on, options) => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'board',
-      description: "Update this project's board of done, pending and waiting items from the conversation",
+      description: "Update this session's board of done, pending and waiting items from the conversation",
     })
 
     return next(e)
