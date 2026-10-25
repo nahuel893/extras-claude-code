@@ -113,6 +113,12 @@ Then each card once it has something to show:
 
 The last two need those mods. Both write into the session's folder under its project, `~/.cache/refined-claude-code/projects/<project slug>/<session id>/`: `/board` writes `board.md` and `/summ` writes `summary.md`. The panel reads only the current session's files, never another session's. The panel checks both files every 1.5 seconds and redraws a section when its file changes. With no file, or an empty one, the card is left out.
 
+### Transcript scrollbar
+
+A one-character column runs down the panel's left edge, between the transcript and the cards. The `muted` track holds a thumb in the `accent` color that marks which part of the conversation the transcript shows. Click any cell and the transcript jumps to the message at that height: the top cell is the first message, the bottom cell takes you back to the latest. It is for scrolling up fast with the mouse; the wheel and PageUp/PageDown work as before, and dragging the thumb is not possible (a pane gets clicks, not drags).
+
+The bar learns where the viewport is from the rows the transcript draws, so it knows only the messages drawn in this session, in the order they were drawn, and sizes each by the rows it has seen on screen. A message too far back to still be drawn cannot be scrolled to: you get a toast, and scrolling closer first makes it reachable. A panel taller than its pane scrolls the bar with it.
+
 ### Feeding the panel from your status line script
 
 The panel reads the input Claude Code last gave your script, so the script has to keep it. Add this near the top of `~/.claude/statusline.sh`, after it reads stdin into `$input`:
