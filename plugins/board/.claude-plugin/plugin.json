@@ -9,6 +9,12 @@
       "title": "Model",
       "description": "The model that rewrites the board: an alias such as haiku or a full model id.",
       "default": "claude-haiku-5-5"
+    },
+    "reminderTurns": {
+      "type": "number",
+      "title": "Reminder turns",
+      "description": "How many of your turns may pass with pending board items and no board tool call before Claude is reminded in one line.",
+      "default": 5
     }
   }
 }

@@ -1,6 +1,6 @@
 import type { EngineInterface, Register } from 'claude-code'
 import { boardLines, boardPath, promptOf, SYSTEM, transcriptOf } from './board'
-import { applyCall, TOOL_DESCRIPTION, TOOL_NAME, TOOL_SCHEMA } from './tool'
+import { applyCall, boardText, changedOf, hintOf, pendingOf, reminderOf, TOOL_DESCRIPTION, TOOL_NAME, TOOL_SCHEMA } from './tool'
 
 const DEFAULT_MODEL = 'claude-haiku-5-5'
 
@@ -13,6 +13,9 @@ const TIMEOUT_MS = 120_000
 /** The board tool as the model calls it: `mcp__<plugin>__<name>`. */
 const TOOL = `mcp__board__${TOOL_NAME}`
 
+/** How many user turns may pass with pending items and no board tool call before a reminder. */
+const REMINDER_TURNS = 5
+
 /** This session's board file, or why there is none. */
 async function sessionBoard($: EngineInterface): Promise<{ path: string } | { reason: string }> {
   const home = await $.env.get('HOME')
@@ -20,22 +23,66 @@ async function sessionBoard($: EngineInterface): Promise<{ path: string } | { re
   return { path: boardPath(home, await $.session.cwd(), await $.session.id()) }
 }
 
+/** This session's board as file text: its board lines alone, or empty when there is no file. */
+async function readBoard($: EngineInterface, path: string) {
+  return boardText(boardLines(await $.fs.read(path).catch(() => '')))
+}
+
+/**
+ * What the mod remembers of the model's view of the board, for the session (a reload starts over).
+ *
+ * `known` is the board as the model last saw it, through the tool or a listing: a file that differs
+ * from it was changed outside the tool. A new session has no file, which reads as an empty board. `quietTurns`
+ * counts the user turns since the model last called the tool or was reminded.
+ */
+type Seen = { known: string; quietTurns: number; reminderTurns: number }
+
 /**
  * Applies one board tool call to this session's board file and answers the line the model reads.
  * A call that cannot apply writes nothing; a failure is a reply too, never a throw.
  */
-async function callTool($: EngineInterface, input: Record<string, unknown>): Promise<string> {
+async function callTool($: EngineInterface, seen: Seen, input: Record<string, unknown>): Promise<string> {
+  seen.quietTurns = 0
   try {
     const board = await sessionBoard($)
     if ('reason' in board) return `Board not changed: ${board.reason}`
 
-    const previous = await $.fs.read(board.path).catch(() => '')
-    const { board: next, reply } = applyCall(previous, input)
-    if (next !== undefined) await $.fs.write(board.path, next)
+    const { board: next, reply } = applyCall(await readBoard($, board.path), input)
+    if (next !== undefined) {
+      await $.fs.write(board.path, next)
+      seen.known = next
+    }
     return reply
   } catch (error) {
     return `Board not changed: ${error instanceof Error ? error.message : String(error)}`
   }
+}
+
+/**
+ * What the next prompt hands the model about the board: the numbered list once after an outside
+ * change, else one reminder line when items are pending and the tool sat unused for long enough.
+ */
+async function promptContext($: EngineInterface, seen: Seen): Promise<string[]> {
+  seen.quietTurns += 1
+  const board = await sessionBoard($)
+  if ('reason' in board) return []
+
+  const current = await readBoard($, board.path)
+  const lines = boardLines(current)
+  if (current !== seen.known) {
+    seen.known = current
+    if (lines.length) {
+      seen.quietTurns = 0
+      return [changedOf(lines)]
+    }
+  }
+
+  const pending = pendingOf(lines)
+  if (pending > 0 && seen.quietTurns > seen.reminderTurns) {
+    seen.quietTurns = 0
+    return [reminderOf(pending)]
+  }
+  return []
 }
 
 /**
@@ -81,6 +128,9 @@ async function updateBoard($: EngineInterface, model: string) {
 
 export const register: Register = (on, options) => {
   const model = typeof options.model === 'string' && options.model.trim() ? options.model.trim() : DEFAULT_MODEL
+  const reminderTurns =
+    typeof options.reminderTurns === 'number' && options.reminderTurns >= 1 ? Math.floor(options.reminderTurns) : REMINDER_TURNS
+  const seen: Seen = { known: '', quietTurns: 0, reminderTurns }
   // One update at a time: a second /board while the model works would race it to the file.
   let isUpdating = false
 
@@ -109,6 +159,18 @@ export const register: Register = (on, options) => {
     return { text: 'Updating the board…' }
   })
 
+  // MCP tools may wait behind ToolSearch, where the model sees the name alone: one line says when to use it.
+  on('classic.SessionStart', async ($, e, next) => {
+    const result = await next(e)
+    return { ...result, additionalContext: [...(result.additionalContext ?? []), hintOf(TOOL)] }
+  })
+
+  on('classic.UserPromptSubmit', async ($, e, next) => {
+    const result = await next(e)
+    const context = await promptContext($, seen).catch(() => [])
+    return context.length ? { ...result, additionalContext: [...(result.additionalContext ?? []), ...context] } : result
+  })
+
   // The model's arguments ride beside the call's own keys; the tool reads only its own three.
-  on('tool.call', { tool: TOOL }, async ($, e) => ({ result: await callTool($, e as Record<string, unknown>) }))
+  on('tool.call', { tool: TOOL }, async ($, e) => ({ result: await callTool($, seen, e as Record<string, unknown>) }))
 }

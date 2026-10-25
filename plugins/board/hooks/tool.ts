@@ -29,6 +29,22 @@ const progressOf = (lines: readonly string[]) => `${lines.filter(line => line.st
 
 const itemsOf = (count: number) => `${count} item${count === 1 ? '' : 's'}`
 
+/** The board's lines numbered from 1, the numbers the tool's `done` and `wait` take. */
+export const numbered = (lines: readonly string[]) => lines.map((line, index) => `${index + 1}. ${line}`).join('\n')
+
+/** The line the session start hands the model, as the tool may wait behind ToolSearch. */
+export const hintOf = (tool: string) =>
+  `Board: for multi-step work, keep this session's board with the ${tool} tool: add items when you start, mark each done as soon as it finishes, wait when blocked on the user.`
+
+/** The one line that reminds the model of pending items it has not touched for a while. */
+export const reminderOf = (pending: number) => `Board: ${pending} pending. Mark finished items done with the board tool.`
+
+/** The numbered board handed to the model once after it changed outside the tool. */
+export const changedOf = (lines: readonly string[]) => `The board changed outside the board tool. Current items:\n${numbered(lines)}`
+
+/** How many items are still pending. */
+export const pendingOf = (lines: readonly string[]) => lines.filter(line => line.startsWith(PENDING)).length
+
 /** The board as file text: one line each and a final newline, or empty. */
 export const boardText = (lines: readonly string[]) => (lines.length ? `${lines.join('\n')}\n` : '')
 
