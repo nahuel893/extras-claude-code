@@ -23,6 +23,8 @@ Answer `y` to add the marketplace, then pick a scope (user scope loads it in eve
 | `/cc` | A list opens above the prompt, newest command first. Press a row's digit to copy that command and close the list. |
 | `/cc <n>` | Copies command `n` right away, for example `/cc 3`. |
 
+![/cc listing the commands of a reply above the prompt](../../assets/features/cc.jpg)
+
 The list:
 
 ```

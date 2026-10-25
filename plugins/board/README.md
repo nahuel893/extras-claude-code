@@ -12,6 +12,8 @@ waits on your decision, pinned in a file under the project instead of buried in 
 Claude keeps the board as it works, through a tool of its own. You type `/board` when you want a
 model to rewrite the board from the whole conversation.
 
+![Claude filling the board with its tool, shown in openskin's status panel](../../assets/features/board.jpg)
+
 ## Install
 
 At the prompt of a Claude Code terminal session:
