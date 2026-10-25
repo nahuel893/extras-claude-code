@@ -1,0 +1,14 @@
+{
+  "name": "summarize",
+  "version": "0.1.0",
+  "description": "A summary of the session on demand: /summ asks a model for a short narrative of the goal, what happened, the decisions and where things stand, and keeps it in a file per session.",
+  "author": { "name": "nahuel893" },
+  "userConfig": {
+    "model": {
+      "type": "string",
+      "title": "Model",
+      "description": "The model that writes the summary: an alias such as haiku or a full model id.",
+      "default": "claude-haiku-5-5"
+    }
+  }
+}

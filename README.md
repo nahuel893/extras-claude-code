@@ -7,6 +7,7 @@ Mods for [Claude Code](https://claude.com/claude-code) that make its terminal in
 | [openskin](plugins/openskin) | An OpenCode-style look for the transcript: your prompts and tool calls in barred blocks, Claude's replies on a band of their own, framed shell commands and a `▣ Claude · model · time` footer. Every color is an option. |
 | [command-register](plugins/command-register) | Every shell command Claude gives goes into a numbered register. `/cc` lists them above the prompt and a digit copies one; `/cc <n>` copies command n. No more selecting commands with the mouse. |
 | [board](plugins/board) | A living board per project: `/board` asks a model to rewrite the list of what is done (`✓`), pending (`○`) and waiting on your decision (`◇`) from the conversation, and keeps it in a file the openskin panel shows. |
+| [summarize](plugins/summarize) | `/summ` asks a model for a short summary of the session (the goal, what happened, the decisions, where it stands) and keeps it in a file per session that the openskin panel shows. |
 
 Unofficial: not affiliated with Anthropic or OpenCode.
 
@@ -24,6 +25,7 @@ Then install the mods you want:
 /plugin install openskin@extras-claude-code
 /plugin install command-register@extras-claude-code
 /plugin install board@extras-claude-code
+/plugin install summarize@extras-claude-code
 ```
 
 From a shell, the same steps are `claude plugin marketplace add nahuel893/extras-claude-code` and `claude plugin install <mod>@extras-claude-code`.
