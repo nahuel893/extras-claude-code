@@ -8,7 +8,7 @@ An OpenCode-style look for the Claude Code terminal transcript, as a Claude Code
 - Shell commands in a reply are framed, so they stand apart from the prose.
 - Each turn closes with a footer: `▣ Claude · <model> · <duration>`.
 
-- In fullscreen, a status panel of cards docks beside the transcript: the project's directory, git branch and uncommitted changes with your status line script's output, one row per part; how full the context window is; each turn's tokens; your subscription's 5-hour and weekly windows; then the project's board and the session summary.
+- In fullscreen, a status panel of cards docks beside the transcript: the project's directory, git branch and uncommitted changes with your status line script's output, one row per part; how full the context window is; each turn's tokens; your subscription's 5-hour and weekly windows; then the session's board and summary.
 - `/skin` switches every color at once between ten presets (Tokyo Night, Catppuccin, Gruvbox, Nord, Rose Pine, Kanagawa, Everforest, One Dark and more), and Claude Code's own theme with them.
 
 Every color is an option, and each part (the OpenCode look, the command frames, the status panel) can be switched off on its own.
@@ -88,10 +88,10 @@ Then each card once it has something to show:
 - **◔ Context**: how full the context window is, as the status line's ten-cell bar (`██████░░░░ 58% (116000/200000)`, the tokens when known): filled cells in the `accent` color, yellow from `contextWarnAt` and the `error` color from `contextDangerAt`, empty cells `muted`. Before the session's first response it is counted once as `/context` does and shown with a `~`.
 - **⇅ Tokens**: the last turn's input (`↑`), output (`↓`) and cache tokens, then the session's running total.
 - **◷ Usage**: the subscription's 5-hour and weekly windows, a bar yellow from 75% and red from 90%, and the time until each resets. Every open session shares the latest reading. Off a subscription there is nothing to show.
-- **≡ Board · 2 of 5**: the project's board from the [board](../board) mod, one row per item, its title counting the done ones. A done item (`✓`) is struck through and dim, a pending one (`○`) plain, and one waiting on your decision (`◇`) has its mark in the accent color. Long items wrap.
+- **≡ Board · 2 of 5**: the session's board from the [board](../board) mod, one row per item, its title counting the done ones. A done item (`✓`) is struck through and dim, a pending one (`○`) plain, and one waiting on your decision (`◇`) has its mark in the accent color. Long items wrap.
 - **¶ Summary**: the session's summary from the [summarize](../summarize) mod, wrapped to the panel's width, never cut.
 
-The last two need those mods: `/board` writes `~/.cache/extras-claude-code/board/<project slug>.md` and `/summ` writes `~/.cache/extras-claude-code/summaries/<session id>.md`. The panel checks both files every 1.5 seconds and redraws a section when its file changes. With no file, or an empty one, the card is left out.
+The last two need those mods. Both write into the session's folder under its project, `~/.cache/extras-claude-code/projects/<project slug>/<session id>/`: `/board` writes `board.md` and `/summ` writes `summary.md`. The panel reads only the current session's files, never another session's. The panel checks both files every 1.5 seconds and redraws a section when its file changes. With no file, or an empty one, the card is left out.
 
 ### Feeding the panel from your status line script
 
