@@ -58,10 +58,15 @@ test("the panel's rows leave out the status line's context bar, which the Contex
 
 test('the panel draws the status line without its 5h and 7d parts', async ($, on) => {
   const clock = mock.clock(on, { now: 0 })
+  const runs: unknown[] = []
   on('env.get', () => ({ value: '/home/test' }))
+  on('session.id', () => ({ value: 'session-1' }))
   on('fs.stat', () => ({ value: { mtimeMs: 1 } as never }))
   on('fs.read', () => ({ value: '{}' }))
-  on('process.run', () => ({ value: { exitCode: 0, stdout: '[Opus 5.5] | 5h:58% | 7d:24% | $1.20\n', stderr: '' } as never }))
+  on('process.run', ($, e) => {
+    runs.push(e)
+    return { value: { exitCode: 0, stdout: '[Opus 5.5] | 5h:58% | 7d:24% | $1.20\n', stderr: '' } as never }
+  })
   on('command.register', () => ({ value: { command: 'panel' } }))
   on('store.get', () => ({ value: undefined }))
   on('session.start', ($, e) => ({ cwd: e.cwd }))
@@ -82,6 +87,35 @@ test('the panel draws the status line without its 5h and 7d parts', async ($, on
   expect(texts).toContain('[Opus 5.5]')
   expect(texts).toContain('$1.20')
   expect(texts.some(text => /5h:|7d:/.test(text ?? ''))).toBe(false)
+  // The panel asks the script for its lines, which it leaves out of the docked session's own status line.
+  expect(JSON.stringify(runs[0])).toContain('"OPENSKIN_PANEL":"1"')
+  await ui.unmount()
+})
+
+test('docked in fullscreen, the panel marks the session so the script leaves the status line empty', async ($, on) => {
+  const writes: string[] = []
+  on('env.get', () => ({ value: '/home/test' }))
+  on('session.id', () => ({ value: 'session-1' }))
+  on('fs.stat', () => ({ deny: 'no input yet' }))
+  on('fs.write', ($, e) => {
+    writes.push((e as { path: string }).path)
+    return { value: undefined }
+  })
+  on('ui.open', () => ({ value: { isPlaced: true } }))
+  on('command.register', () => ({ value: { command: 'panel' } }))
+  on('store.get', () => ({ value: undefined }))
+  on('session.start', ($, e) => ({ cwd: e.cwd }))
+  on('session.usage', () => ({ value: { startedAt: 0, context: { window: 200_000 }, rateLimits: [] } }))
+  on('ui.render', ($, e) => {
+    const { Text } = $.ui.resolve(e)
+    return <Text>engine</Text>
+  })
+
+  await $.session.start({ cwd: '/project', surface: 'terminal', isInteractive: true })
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal', viewport: { columns: 200, rows: 50, isFullscreen: true } })
+  await ui.findAll({ type: 'Text' })
+
+  expect(writes).toContain('/home/test/.cache/openskin/docked/session-1')
   await ui.unmount()
 })
 

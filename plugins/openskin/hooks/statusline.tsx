@@ -8,13 +8,16 @@ import type { StatusLines } from '../types'
 
 /**
  * The status panel docked beside the transcript in fullscreen. Claude Code runs the person's
- * `~/.claude/statusline.sh`, which keeps its latest input in SOURCE; a timer runs the
- * script again on that input whenever it changes and keeps the output in `$.state`,
- * which the panel draws from (a render hook cannot write state itself). Under the status
- * line the panel draws the meters of `./meters/` (context fill, tokens, subscription usage),
- * whose hooks are registered here: a module takes one hook per event.
+ * `~/.claude/statusline.sh`, which keeps each session's latest input in SESSIONS; a timer
+ * runs the script again on this session's input whenever it changes (with OPENSKIN_PANEL
+ * set, so it prints) and keeps the output in `$.state`, which the panel draws from (a render
+ * hook cannot write state itself). Once docked, the panel marks the session in DOCKED and the
+ * script prints nothing for Claude Code's own status line, which would repeat the panel.
+ * Under the status line the panel draws the meters of `./meters/` (context fill, tokens,
+ * subscription usage), whose hooks are registered here: a module takes one hook per event.
  */
-const SOURCE = '.cache/openskin/statusline.json'
+const SESSIONS = '.cache/openskin/sessions'
+const DOCKED = '.cache/openskin/docked'
 const SCRIPT = '.claude/statusline.sh'
 const REFRESH_MS = 1500
 const PANE = 'openskin-status'
@@ -162,16 +165,20 @@ export const panelRows = (lines: StatusLines): string[] =>
 
 export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions) => {
   const thresholds = readThresholds(options)
+  // This session's mark in DOCKED, known once session.start has read the home and session id.
+  let dockedMark = ''
 
   on('session.start', async ($, e, next) => {
     // The meters drawn under the status line; one that fails leaves the others and the status line be.
     await Promise.allSettled([startContextMeter($), startTokenMeter($), startUsageMeter($, e.isInteractive)])
 
     const home = await $.env.get('HOME')
-    if (!home) return next(e)
+    const id = await $.session.id().catch(() => '')
+    if (!home || !id) return next(e)
 
-    const source = `${home}/${SOURCE}`
+    const source = `${home}/${SESSIONS}/${id}.json`
     const script = `${home}/${SCRIPT}`
+    dockedMark = `${home}/${DOCKED}/${id}`
     let seenMtime = -1
     let seenJson = ''
     let isBusy = false
@@ -190,7 +197,11 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
         if (json === seenJson) return
         seenJson = json
 
-        const { exitCode, stdout } = await $.process.run([script], { stdin: json, timeoutMs: 10_000 })
+        const { exitCode, stdout } = await $.process.run([script], {
+          stdin: json,
+          env: { OPENSKIN_PANEL: '1' },
+          timeoutMs: 10_000,
+        })
         if (exitCode !== 0) return
 
         const lines = outputLines(stdout)
@@ -239,6 +250,8 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     if (e.viewport?.isFullscreen === true && !isOpened) {
       isOpened = true
       void $.ui.open({ id: PANE, title: 'Status' })
+      // The panel shows the status line now: the script leaves Claude Code's own one empty.
+      if (dockedMark) void $.fs.write(dockedMark, '').catch(() => {})
     }
 
     return next(e)
