@@ -23,12 +23,16 @@ export const notePaths = (home: string, cwd: string, id: string) => ({
   summary: `${home}/${SUMMARIES}/${id}.md`,
 })
 
-/** A board line as a row: its mark colored (done muted, waiting the accent, pending plain), then the item. */
+/**
+ * A board line as a row: the mark, a space, the item. A done item is struck through and dim, its
+ * mark dim; a waiting one has its mark in the accent; a pending one is plain.
+ */
 export const boardRow = (line: string, theme: Theme): Span[] => {
   const mark = line.slice(0, 1)
-  const color = mark === '✓' ? theme.muted : mark === '◇' ? theme.accent : undefined
+  const item = line.slice(1).trim()
+  if (mark === '✓') return [{ text: mark, dimColor: true }, { text: ' ' }, { text: item, strikethrough: true, dimColor: true }]
 
-  return [{ text: mark, ...(color === undefined ? {} : { color }) }, { text: line.slice(1) }]
+  return [mark === '◇' ? { text: mark, color: theme.accent } : { text: mark }, { text: ' ' }, { text: item }]
 }
 
 /** The file's board lines: those that open on a mark, blank lines and stray text left out. */
@@ -76,12 +80,13 @@ export function startNotes($: EngineInterface, home: string, cwd: string, id: st
   }
 }
 
-/** The Board section: one row per line; nothing with no board. */
+/** The Board section, titled with how many items are done: one row per line; nothing with no board. */
 export async function boardSection($: EngineInterface, theme: Theme): Promise<Section | null> {
   const lines = await read($, board)
   if (lines.length === 0) return null
+  const done = lines.filter(line => line.startsWith('✓')).length
 
-  return { heading: '≡ Board', rows: lines.map(line => boardRow(line, theme)), wrap: 'wrap' }
+  return { heading: `≡ Board · ${done} of ${lines.length}`, rows: lines.map(line => boardRow(line, theme)), wrap: 'wrap' }
 }
 
 /** The Summary section: one row per paragraph, wrapped to the panel; nothing with no summary. */

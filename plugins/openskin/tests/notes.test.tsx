@@ -60,10 +60,18 @@ test("the board file is the project's slug and the summary file the session id",
   expect(notePaths(HOME, '/home/test/projects/app', 'session-1')).toEqual({ board: BOARD, summary: SUMMARY })
 })
 
-test("a board line's mark is colored: done muted, pending plain, waiting the accent", async () => {
-  expect(boardRow('✓ Parser written', THEME_DEFAULTS)).toEqual([{ text: '✓', color: THEME_DEFAULTS.muted }, { text: ' Parser written' }])
-  expect(boardRow('○ Add tests', THEME_DEFAULTS)).toEqual([{ text: '○' }, { text: ' Add tests' }])
-  expect(boardRow('◇ Pick a name', THEME_DEFAULTS)).toEqual([{ text: '◇', color: THEME_DEFAULTS.accent }, { text: ' Pick a name' }])
+test('a board line: done struck through and dim, pending plain, waiting marked in the accent', async () => {
+  expect(boardRow('✓ Parser written', THEME_DEFAULTS)).toEqual([
+    { text: '✓', dimColor: true },
+    { text: ' ' },
+    { text: 'Parser written', strikethrough: true, dimColor: true },
+  ])
+  expect(boardRow('○ Add tests', THEME_DEFAULTS)).toEqual([{ text: '○' }, { text: ' ' }, { text: 'Add tests' }])
+  expect(boardRow('◇ Pick a name', THEME_DEFAULTS)).toEqual([
+    { text: '◇', color: THEME_DEFAULTS.accent },
+    { text: ' ' },
+    { text: 'Pick a name' },
+  ])
 })
 
 test('the panel draws the board, one row per line, and the summary wrapped, after the other sections', async ($, on) => {
@@ -74,12 +82,13 @@ test('the panel draws the board, one row per line, and the summary wrapped, afte
 
   const ui = await $.ui.mount(PANE)
   const all = (await ui.findAll({ type: 'Text' })).map(text => text.text)
-  expect(all.filter(text => ['≡ Board', '¶ Summary'].includes(text ?? ''))).toEqual(['≡ Board', '¶ Summary'])
-  expect((await ui.findAll({ type: 'Text', text: /^ (Parser written|Add tests|Pick a name)$/ })).map(text => text.text)).toEqual([
-    ' Parser written',
-    ' Add tests',
-    ' Pick a name',
+  expect(all.filter(text => ['≡ Board · 1 of 3', '¶ Summary'].includes(text ?? ''))).toEqual(['≡ Board · 1 of 3', '¶ Summary'])
+  expect((await ui.findAll({ type: 'Text', text: /^(Parser written|Add tests|Pick a name)$/ })).map(text => text.text)).toEqual([
+    'Parser written',
+    'Add tests',
+    'Pick a name',
   ])
+  expect((await ui.findAll({ type: 'Text', text: /^Parser written$/ })).at(-1)?.props).toMatchObject({ strikethrough: true, dimColor: true })
   expect((await ui.findAll({ type: 'Text', text: /^◇$/ })).at(-1)?.props.color).toBe(THEME_DEFAULTS.accent)
   const summary = (await ui.findAll({ type: 'Text', text: /^The goal was a parser/ }))[0]
   expect(summary?.props.wrap).toBe('wrap')
@@ -92,7 +101,7 @@ test('an absent or empty file draws no section', async ($, on) => {
   await startSession($)
 
   const all = await texts($)
-  expect(all).not.toContain('≡ Board')
+  expect(all.some(text => text?.startsWith('≡ Board'))).toBe(false)
   expect(all).not.toContain('¶ Summary')
 })
 
@@ -100,18 +109,19 @@ test('a file that changes is drawn again, and one removed takes its section away
   const { clock, write, remove } = world(on)
   write(BOARD, '○ Add tests\n')
   await startSession($)
-  expect(await texts($)).toContain(' Add tests')
+  expect(await texts($)).toContain('Add tests')
 
   write(BOARD, '✓ Add tests\n○ Ship it\n')
   write(SUMMARY, 'Tests are in.\n')
   await clock.advance(1500)
   const after = await texts($)
-  expect(after).toContain(' Ship it')
+  expect(after).toContain('Ship it')
+  expect(after).toContain('≡ Board · 1 of 2')
   expect(after).toContain('Tests are in.')
 
   remove(BOARD)
   await clock.advance(1500)
   const gone = await texts($)
-  expect(gone).not.toContain('≡ Board')
+  expect(gone.some(text => text?.startsWith('≡ Board'))).toBe(false)
   expect(gone).toContain('¶ Summary')
 })

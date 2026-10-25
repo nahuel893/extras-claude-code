@@ -4,6 +4,7 @@ import { contextSection, measureContext, readThresholds, startContextMeter, stop
 import { countTurn, startTokenMeter, tokenSection } from './meters/tokens'
 import { measureUsage, startUsageMeter, stopUsageMeter, usageSection } from './meters/usage'
 import { boardSection, startNotes, summarySection } from './notes'
+import { GIT_EVERY, inputDir, projectStatus, shortHome, startProject } from './project'
 import type { Theme } from './theme'
 import type { StatusLines } from '../types'
 
@@ -17,6 +18,10 @@ import type { StatusLines } from '../types'
  * Under the status line the panel draws the meters of `./meters/` (context fill, tokens,
  * subscription usage), whose hooks are registered here: a module takes one hook per event.
  * Last come the board and the session summary of `./notes`, polled on the same timer.
+ *
+ * Each part is a card: a round border with its title drawn over the top edge. The first card,
+ * Status, is the mod's own: the project's directory, branch and uncommitted changes from
+ * `./project` (git run on the same timer), then the status line's rows.
  */
 const SESSIONS = '.cache/openskin/sessions'
 const DOCKED = '.cache/openskin/docked'
@@ -28,7 +33,14 @@ const SEPARATOR = / \| /
 const statusLines = atom({ plugin: 'openskin', key: 'statusLines' } as const, [])
 
 /** A run of text in one style, as the ANSI codes before it left the style. */
-export type Span = { text: string; color?: string; backgroundColor?: string; bold?: boolean; dimColor?: boolean }
+export type Span = {
+  text: string
+  color?: string
+  backgroundColor?: string
+  bold?: boolean
+  dimColor?: boolean
+  strikethrough?: boolean
+}
 
 type Style = Omit<Span, 'text'>
 
@@ -131,6 +143,9 @@ export const parseAnsi = (line: string): Span[] => {
 /** Columns a block adds around its text: both gutters, the bar and the content padding. */
 const BLOCK_CHROME = 2 + 1 + 2 + 2 + 2
 
+/** Columns a card of the panel adds around its rows: the border and the padding on each side. */
+const CARD_CHROME = 2 + 2
+
 /**
  * Columns a status line takes on screen: its text without escape codes, an emoji
  * counted as two columns, joiners and variation selectors as none.
@@ -172,6 +187,8 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
   const thresholds = readThresholds(options)
   // This session's mark in DOCKED, known once session.start has read the home and session id.
   let dockedMark = ''
+  // The home directory, which the Status card writes as `~`.
+  let homeDir = ''
 
   on('session.start', async ($, e, next) => {
     // The meters drawn under the status line; one that fails leaves the others and the status line be.
@@ -180,6 +197,7 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     const home = await $.env.get('HOME')
     const id = await $.session.id().catch(() => '')
     if (!home || !id) return next(e)
+    homeDir = home
 
     const source = `${home}/${SESSIONS}/${id}.json`
     const script = `${home}/${SCRIPT}`
@@ -188,6 +206,8 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     let seenJson = ''
     let isBusy = false
     const pollNotes = startNotes($, home, e.cwd, id)
+    const pollProject = startProject($, e.cwd)
+    let ticks = 0
 
     // The script rewrites SOURCE on every run, so a new mtime alone is not new input:
     // the text decides.
@@ -202,6 +222,8 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
         const json = await $.fs.read(source)
         if (json === seenJson) return
         seenJson = json
+        // New input (a turn ended, or the session moved): git is read again, in the directory it names.
+        void pollProject(inputDir(json, e.cwd))
 
         const { exitCode, stdout } = await $.process.run([script], {
           stdin: json,
@@ -220,10 +242,13 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     }
 
     void refresh()
+    void pollProject()
     await pollNotes()
     $.clock.every(REFRESH_MS, () => {
       void refresh()
       void pollNotes()
+      // Edits made outside the session change no input: git is read anyway every GIT_EVERY ticks.
+      if (++ticks % GIT_EVERY === 0) void pollProject()
     })
 
     await $.command.register({ name: 'panel', description: 'Open the status panel beside the transcript' })
@@ -274,15 +299,17 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     return next(e)
   })
 
-  // The status line's parts, one row each, then a section per meter that has something to show.
+  // The Status card (the project, then the status line's parts, one row each), then a card per
+  // section that has something to show.
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Text } = $.ui.resolve(e)
-    // The body less the Box's own padding on each side.
-    const columns = Math.max(1, e.props.bodyColumns - 2)
-    // Under the status line, in this order: the context window, the tokens, the subscription,
+    // The body less each card's border and padding on both sides.
+    const columns = Math.max(1, e.props.bodyColumns - CARD_CHROME)
+    // After the Status card, in this order: the context window, the tokens, the subscription,
     // the board, the session summary.
-    const [lines, ...drawn] = await Promise.all([
+    const [lines, project, ...drawn] = await Promise.all([
       read($, statusLines),
+      projectStatus($),
       contextSection($, thresholds),
       tokenSection($),
       usageSection($, columns),
@@ -299,17 +326,52 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
         ))}
       </Text>
     )
+    const label = (text: string) => <Text color={theme.muted}>{text}</Text>
+
+    // A round border in a quiet color, its title laid over the top edge. The title is a sibling of
+    // the bordered Box, after it so it paints over it, at the wrapper's row 0 (the border row) two
+    // columns in (`╭─` before it): a Box clips what it holds to the inside of its own border.
+    const card = (title: string, body: JSX.Element[]) => (
+      <Box flexDirection="column">
+        <Box flexDirection="column" borderStyle="round" borderColor={theme.toolBar} paddingX={1}>
+          {body}
+        </Box>
+        <Box position="absolute" top={0} left={2} right={2}>
+          <Text wrap="truncate-end">
+            {' '}
+            <Text color={theme.accent}>{title}</Text>{' '}
+          </Text>
+        </Box>
+      </Box>
+    )
+
+    const status: JSX.Element[] = []
+    if (project) {
+      status.push(label('Project'), <Text bold wrap="wrap">{shortHome(project.dir, homeDir)}</Text>)
+      if (project.branch !== null) {
+        status.push(
+          <Text wrap="truncate-end">
+            {label('Branch')} <Text bold>{project.branch}</Text>
+          </Text>,
+        )
+      }
+      if (project.files > 0) {
+        status.push(
+          label('Changes'),
+          <Text wrap="truncate-end">
+            <Text>{`${project.files} ${project.files === 1 ? 'file' : 'files'} · `}</Text>
+            <Text color="green">{`+${project.added}`}</Text> <Text color={theme.error}>{`-${project.deleted}`}</Text>
+          </Text>,
+        )
+      }
+    }
+    status.push(...rows.map(row => drawRow(parseAnsi(row))))
+    if (status.length === 0) status.push(<Text color={theme.muted}>Waiting for the status line…</Text>)
 
     return (
-      <Box flexDirection="column" paddingX={1}>
-        {rows.length === 0 && <Text color={theme.muted}>Waiting for the status line…</Text>}
-        {rows.map(row => drawRow(parseAnsi(row)))}
-        {sections.map(section => (
-          <Box flexDirection="column" marginTop={1}>
-            <Text color={theme.muted}>{section.heading}</Text>
-            {section.rows.map(row => drawRow(row, section.wrap))}
-          </Box>
-        ))}
+      <Box flexDirection="column" gap={1}>
+        {card('✿ Status', status)}
+        {sections.map(section => card(section.heading, section.rows.map(row => drawRow(row, section.wrap))))}
       </Box>
     )
   })

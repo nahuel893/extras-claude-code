@@ -8,7 +8,7 @@ An OpenCode-style look for the Claude Code terminal transcript, as a Claude Code
 - Shell commands in a reply are framed, so they stand apart from the prose.
 - Each turn closes with a footer: `▣ Claude · <model> · <duration>`.
 
-- In fullscreen, a status panel docks beside the transcript: your status line script's output, one row per part, and under it how full the context window is, each turn's tokens and your subscription's 5-hour and weekly windows, then the project's board and the session summary.
+- In fullscreen, a status panel of cards docks beside the transcript: the project's directory, git branch and uncommitted changes with your status line script's output, one row per part; how full the context window is; each turn's tokens; your subscription's 5-hour and weekly windows; then the project's board and the session summary.
 
 Every color is an option, and each part (the OpenCode look, the command frames, the status panel) can be switched off on its own.
 
@@ -75,15 +75,19 @@ A setting that something else controls, such as a theme fixed by managed setting
 
 ## Status panel
 
-In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). It runs `~/.claude/statusline.sh` and draws each ` | ` separated part on its own row, leaving out the `5h:` and `7d:` parts and the context bar, which the ◷ Usage and ◔ Context sections replace. Under the rows, each section once it has something to show:
+In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). Every part of it is a card: a rounded border in the `toolBar` color with the card's title drawn in its top edge, one blank row between cards, labels in the `muted` color and values bold.
+
+- **✿ Status**: always first. The project's directory (your home written as `~`); inside a git work tree, `Branch` and, while there are uncommitted changes, `Changes`: how many files are changed or untracked, then the lines added (green) and deleted (the `error` color) in tracked files since the last commit (untracked files count as files, their lines are not counted). Under them, the rows of `~/.claude/statusline.sh`, each ` | ` separated part on its own row, leaving out the `5h:` and `7d:` parts and the context bar, which the ◷ Usage and ◔ Context cards replace. Git runs again when Claude Code gives the status line new input (after a turn, or in another directory) and otherwise every 15 seconds, so edits made outside the session show up too.
+
+Then each card once it has something to show:
 
 - **◔ Context**: how full the context window is, gray, yellow from `contextWarnAt` and red from `contextDangerAt`. Before the session's first response it is counted once as `/context` does and shown with a `~`.
 - **⇅ Tokens**: the last turn's input (`↑`), output (`↓`) and cache tokens, then the session's running total.
 - **◷ Usage**: the subscription's 5-hour and weekly windows, a bar yellow from 75% and red from 90%, and the time until each resets. Every open session shares the latest reading. Off a subscription there is nothing to show.
-- **≡ Board**: the project's board from the [board](../board) mod, one row per item. The mark is muted for done (`✓`), plain for pending (`○`) and the accent color for waiting on your decision (`◇`). Long items wrap.
+- **≡ Board · 2 of 5**: the project's board from the [board](../board) mod, one row per item, its title counting the done ones. A done item (`✓`) is struck through and dim, a pending one (`○`) plain, and one waiting on your decision (`◇`) has its mark in the accent color. Long items wrap.
 - **¶ Summary**: the session's summary from the [summarize](../summarize) mod, wrapped to the panel's width, never cut.
 
-The last two need those mods: `/board` writes `~/.cache/extras-claude-code/board/<project slug>.md` and `/summ` writes `~/.cache/extras-claude-code/summaries/<session id>.md`. The panel checks both files every 1.5 seconds and redraws a section when its file changes. With no file, or an empty one, the section is left out.
+The last two need those mods: `/board` writes `~/.cache/extras-claude-code/board/<project slug>.md` and `/summ` writes `~/.cache/extras-claude-code/summaries/<session id>.md`. The panel checks both files every 1.5 seconds and redraws a section when its file changes. With no file, or an empty one, the card is left out.
 
 ### Feeding the panel from your status line script
 

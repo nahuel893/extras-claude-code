@@ -66,7 +66,7 @@ test('the panel draws the status line without its 5h and 7d parts', async ($, on
   on('fs.stat', () => ({ value: { mtimeMs: 1 } as never }))
   on('fs.read', () => ({ value: '{}' }))
   on('process.run', ($, e) => {
-    runs.push(e)
+    if (e.argv[0] !== 'git') runs.push(e)
     return { value: { exitCode: 0, stdout: '[Opus 5.5] | 5h:58% | 7d:24% | $1.20\n', stderr: '' } as never }
   })
   on('command.register', () => ({ value: { command: 'panel' } }))

@@ -12,6 +12,13 @@ export type StatusLines = string[]
 /** The board mod's file for this project, one `✓ `, `○ ` or `◇ ` line per item. */
 export type BoardLines = string[]
 
+/**
+ * The session's project as the Status card shows it: its directory, and inside a git work tree the
+ * branch and the uncommitted changes (files changed or untracked; lines added and deleted in
+ * tracked files). `branch` null outside a work tree, the counts 0 then.
+ */
+export type ProjectStatus = { dir: string; branch: string | null; files: number; added: number; deleted: number }
+
 /** Token counts of one turn, or summed over the session. */
 export type Tokens = { input: number; output: number; cached: number }
 
@@ -36,6 +43,7 @@ declare module 'claude-code' {
       usageTick: number
       board: BoardLines
       summary: string
+      project: ProjectStatus | null
     }
   }
 }
