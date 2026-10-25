@@ -9,6 +9,7 @@ What building these mods taught about the Claude Code mod engine. Each item cost
 - Plugin names starting with `claude-` are reserved by the validator.
 - `read` and `update` only accept atoms defined in the same module.
 - `rg` skips the hidden `.claude-plugin/` folder unless it is named explicitly.
+- A function that receives `$` must be declared at the top level of the hooks module (a function declaration, or a `const` bound to one), or imported from one of the mod's own files. A helper defined inside `register` that takes `$` makes the whole module fail to load (`$ is passed to "<name>", which is not a function declared at the top of this file`). Keep per-session state in an object created in `register` and pass it to the top-level function.
 
 ## Rendering
 
@@ -23,6 +24,7 @@ What building these mods taught about the Claude Code mod engine. Each item cost
 ## Runtime
 
 - Background work goes on `$.clock.after(0)` from `command.run`, so the command answers at once.
+- A hook gets 10 s of its own time per dispatch (`HookBudget.ms` in the engine types). The clock stops while a `next(e)` or `$` call is in flight, so a long `$.model.complete` costs nothing. But it keeps running through `$.clock.sleep` and through awaiting a plain promise, such as a lock. Past the budget the hook is skipped, and a `tool.call` that no hook answers fails. Read `next.budget.remainingMs` to bound a wait (board's tool waits at most about 7 s for `/board`).
 - `$.fs.write` creates parent directories.
 - `$.config.set({ key, value })` reloads the module with the new options.
 - A session follows outside edits of `settings.json`, through a symlink too, and reloads plugins whose options changed. But a session started while the file was a regular file stops seeing edits once it is replaced by a symlink.
