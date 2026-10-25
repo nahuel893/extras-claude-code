@@ -3,6 +3,7 @@ import type { On, PluginOptions } from 'claude-code'
 import { contextSection, measureContext, readThresholds, startContextMeter, stopContextMeter } from './meters/context'
 import { countTurn, startTokenMeter, tokenSection } from './meters/tokens'
 import { measureUsage, startUsageMeter, stopUsageMeter, usageSection } from './meters/usage'
+import { boardSection, startNotes, summarySection } from './notes'
 import type { Theme } from './theme'
 import type { StatusLines } from '../types'
 
@@ -15,6 +16,7 @@ import type { StatusLines } from '../types'
  * script prints nothing for Claude Code's own status line, which would repeat the panel.
  * Under the status line the panel draws the meters of `./meters/` (context fill, tokens,
  * subscription usage), whose hooks are registered here: a module takes one hook per event.
+ * Last come the board and the session summary of `./notes`, polled on the same timer.
  */
 const SESSIONS = '.cache/openskin/sessions'
 const DOCKED = '.cache/openskin/docked'
@@ -30,8 +32,11 @@ export type Span = { text: string; color?: string; backgroundColor?: string; bol
 
 type Style = Omit<Span, 'text'>
 
-/** A block of the panel under the status line: a muted heading over rows of styled spans. */
-export type Section = { heading: string; rows: Span[][] }
+/**
+ * A block of the panel under the status line: a muted heading over rows of styled spans, each row
+ * cut at the panel's edge, or wrapped onto the next lines with `wrap`.
+ */
+export type Section = { heading: string; rows: Span[][]; wrap?: 'wrap' }
 
 /** The eight standard colors by name, so they follow the terminal's own palette. */
 const STANDARD = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white']
@@ -182,6 +187,7 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     let seenMtime = -1
     let seenJson = ''
     let isBusy = false
+    const pollNotes = startNotes($, home, e.cwd, id)
 
     // The script rewrites SOURCE on every run, so a new mtime alone is not new input:
     // the text decides.
@@ -214,7 +220,11 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     }
 
     void refresh()
-    $.clock.every(REFRESH_MS, () => void refresh())
+    await pollNotes()
+    $.clock.every(REFRESH_MS, () => {
+      void refresh()
+      void pollNotes()
+    })
 
     await $.command.register({ name: 'panel', description: 'Open the status panel beside the transcript' })
 
@@ -269,18 +279,21 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     const { Box, Text } = $.ui.resolve(e)
     // The body less the Box's own padding on each side.
     const columns = Math.max(1, e.props.bodyColumns - 2)
-    // Under the status line, in this order: the context window, the tokens, the subscription.
+    // Under the status line, in this order: the context window, the tokens, the subscription,
+    // the board, the session summary.
     const [lines, ...drawn] = await Promise.all([
       read($, statusLines),
       contextSection($, thresholds),
       tokenSection($),
       usageSection($, columns),
+      boardSection($, theme),
+      summarySection($),
     ])
     const rows = panelRows(lines)
     const sections = drawn.filter((section): section is Section => section !== null)
 
-    const drawRow = (spans: Span[]) => (
-      <Text wrap="truncate-end">
+    const drawRow = (spans: Span[], wrap: 'wrap' | 'truncate-end' = 'truncate-end') => (
+      <Text wrap={wrap}>
         {spans.map(({ text, ...style }) => (
           <Text {...style}>{text}</Text>
         ))}
@@ -294,7 +307,7 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
         {sections.map(section => (
           <Box flexDirection="column" marginTop={1}>
             <Text color={theme.muted}>{section.heading}</Text>
-            {section.rows.map(drawRow)}
+            {section.rows.map(row => drawRow(row, section.wrap))}
           </Box>
         ))}
       </Box>

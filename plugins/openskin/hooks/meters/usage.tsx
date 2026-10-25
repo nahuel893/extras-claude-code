@@ -153,5 +153,5 @@ export async function usageSection($: EngineInterface, columns: number): Promise
   const [, now] = await Promise.all([read($, tick), $.clock.now()])
   const labelWidth = Math.max(...all.map(limit => widthOf(labelOf(limit))))
 
-  return { heading: 'Usage', rows: all.map(limit => usageRow(limit, now, columns, labelWidth)) }
+  return { heading: '◷ Usage', rows: all.map(limit => usageRow(limit, now, columns, labelWidth)) }
 }

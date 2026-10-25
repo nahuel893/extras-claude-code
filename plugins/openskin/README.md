@@ -8,7 +8,7 @@ An OpenCode-style look for the Claude Code terminal transcript, as a Claude Code
 - Shell commands in a reply are framed, so they stand apart from the prose.
 - Each turn closes with a footer: `▣ Claude · <model> · <duration>`.
 
-- In fullscreen, a status panel docks beside the transcript: your status line script's output, one row per part, and under it how full the context window is, each turn's tokens and your subscription's 5-hour and weekly windows.
+- In fullscreen, a status panel docks beside the transcript: your status line script's output, one row per part, and under it how full the context window is, each turn's tokens and your subscription's 5-hour and weekly windows, then the project's board and the session summary.
 
 Every color is an option, and each part (the OpenCode look, the command frames, the status panel) can be switched off on its own.
 
@@ -41,7 +41,7 @@ Change them with `/plugin configure openskin@extras-claude-code`. A color is a h
 | `opencodeStyle` | `true` | The OpenCode look: prompt, tool and error blocks, the reply band, the turn footer. |
 | `commandFrames` | `true` | Frames the shell commands in Claude's replies and asks Claude to tag them as shell blocks. |
 | `statusPanel` | `true` | The status panel beside the transcript in fullscreen; `/panel` opens it. |
-| `contextWarnAt` | `50` | The context fill, in percent, from which the panel's Context section turns yellow (time to `/compact`). |
+| `contextWarnAt` | `50` | The context fill, in percent, from which the panel's ◔ Context section turns yellow (time to `/compact`). |
 | `contextDangerAt` | `75` | The context fill from which it turns red (compact now or start a new session). |
 | `accent` | `#f0a6ec` | The bar beside your prompts and the square in the footer. |
 | `surface` | `#24242c` | The background of the prompt, tool and error blocks. |
@@ -55,11 +55,15 @@ With `opencodeStyle` off and `commandFrames` on, Claude Code keeps its own trans
 
 ## Status panel
 
-In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). It runs `~/.claude/statusline.sh` and draws each ` | ` separated part on its own row, leaving out the `5h:` and `7d:` parts and the context bar, which the Usage and Context sections replace. Under the rows, each section once it has something to show:
+In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). It runs `~/.claude/statusline.sh` and draws each ` | ` separated part on its own row, leaving out the `5h:` and `7d:` parts and the context bar, which the ◷ Usage and ◔ Context sections replace. Under the rows, each section once it has something to show:
 
-- **Context**: how full the context window is, gray, yellow from `contextWarnAt` and red from `contextDangerAt`. Before the session's first response it is counted once as `/context` does and shown with a `~`.
-- **Tokens**: the last turn's input (`↑`), output (`↓`) and cache tokens, then the session's running total.
-- **Usage**: the subscription's 5-hour and weekly windows, a bar yellow from 75% and red from 90%, and the time until each resets. Every open session shares the latest reading. Off a subscription there is nothing to show.
+- **◔ Context**: how full the context window is, gray, yellow from `contextWarnAt` and red from `contextDangerAt`. Before the session's first response it is counted once as `/context` does and shown with a `~`.
+- **⇅ Tokens**: the last turn's input (`↑`), output (`↓`) and cache tokens, then the session's running total.
+- **◷ Usage**: the subscription's 5-hour and weekly windows, a bar yellow from 75% and red from 90%, and the time until each resets. Every open session shares the latest reading. Off a subscription there is nothing to show.
+- **≡ Board**: the project's board from the [board](../board) mod, one row per item. The mark is muted for done (`✓`), plain for pending (`○`) and the accent color for waiting on your decision (`◇`). Long items wrap.
+- **¶ Summary**: the session's summary from the [summarize](../summarize) mod, wrapped to the panel's width, never cut.
+
+The last two need those mods: `/board` writes `~/.cache/extras-claude-code/board/<project slug>.md` and `/summ` writes `~/.cache/extras-claude-code/summaries/<session id>.md`. The panel checks both files every 1.5 seconds and redraws a section when its file changes. With no file, or an empty one, the section is left out.
 
 ### Feeding the panel from your status line script
 

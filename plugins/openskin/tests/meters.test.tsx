@@ -182,12 +182,12 @@ test('the panel draws Context, Tokens and Usage sections under the status line',
   await turnEnd($, USAGE)
 
   const ui = await $.ui.mount(PANE)
-  expect(await ui.find({ type: 'Text', text: 'Context' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: '◔ Context' })).toBeDefined()
   expect(await span(ui, '30%')).toMatchObject({ props: { dimColor: true } })
-  expect(await ui.find({ type: 'Text', text: 'Tokens' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: '⇅ Tokens' })).toBeDefined()
   expect((await span(ui, '↑'))?.props.color).toBe('suggestion')
   expect(await ui.find({ type: 'Text', text: 'session ↑ 1.2k  ↓ 340' })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: 'Usage' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: '◷ Usage' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: ' ↻ 2h 10m' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: ' ↻ 3d 4h' })).toBeDefined()
   await ui.unmount()
@@ -198,8 +198,8 @@ test('the headings come in order: Context, Tokens, Usage', async ($, on) => {
   await startSession($)
   await turnEnd($, USAGE)
 
-  const headings = (await texts($)).filter(text => ['Context', 'Tokens', 'Usage'].includes(text ?? ''))
-  expect(headings).toEqual(['Context', 'Tokens', 'Usage'])
+  const headings = (await texts($)).filter(text => ['◔ Context', '⇅ Tokens', '◷ Usage'].includes(text ?? ''))
+  expect(headings).toEqual(['◔ Context', '⇅ Tokens', '◷ Usage'])
 })
 
 test('a section with nothing to show is left out', async ($, on) => {
@@ -207,9 +207,9 @@ test('a section with nothing to show is left out', async ($, on) => {
   await startSession($)
 
   const all = await texts($)
-  expect(all).not.toContain('Context')
-  expect(all).not.toContain('Tokens')
-  expect(all).not.toContain('Usage')
+  expect(all).not.toContain('◔ Context')
+  expect(all).not.toContain('⇅ Tokens')
+  expect(all).not.toContain('◷ Usage')
 })
 
 test('the context section follows each measurement, yellow from 50% and red from 75%', async ($, on) => {

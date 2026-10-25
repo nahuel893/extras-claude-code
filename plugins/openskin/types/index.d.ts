@@ -9,6 +9,9 @@
 /** The status line script's latest output, one entry per line, ANSI codes kept. */
 export type StatusLines = string[]
 
+/** The board mod's file for this project, one `✓ `, `○ ` or `◇ ` line per item. */
+export type BoardLines = string[]
+
 /** Token counts of one turn, or summed over the session. */
 export type Tokens = { input: number; output: number; cached: number }
 
@@ -31,6 +34,8 @@ declare module 'claude-code' {
       contextFill: Fill
       usageLimits: Limit[]
       usageTick: number
+      board: BoardLines
+      summary: string
     }
   }
 }

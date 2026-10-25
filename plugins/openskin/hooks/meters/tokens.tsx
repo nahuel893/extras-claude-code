@@ -63,5 +63,5 @@ export async function tokenSection($: EngineInterface): Promise<Section | null> 
   const last = await read($, turn)
   if (last === null) return null
 
-  return { heading: 'Tokens', rows: tokenRows(last, await read($, session)) }
+  return { heading: '⇅ Tokens', rows: tokenRows(last, await read($, session)) }
 }

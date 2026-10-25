@@ -98,5 +98,5 @@ export async function contextSection($: EngineInterface, { warnAt, dangerAt }: T
   const fill = await read($, percent)
   if (fill === null) return null
 
-  return { heading: 'Context', rows: [contextRow(fill, warnAt, dangerAt)] }
+  return { heading: '◔ Context', rows: [contextRow(fill, warnAt, dangerAt)] }
 }
