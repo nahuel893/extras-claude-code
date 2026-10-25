@@ -53,6 +53,26 @@ Change them with `/plugin configure openskin@extras-claude-code`. A color is a h
 
 With `opencodeStyle` off and `commandFrames` on, Claude Code keeps its own transcript and only the commands are framed. With both off, the mod draws nothing.
 
+## Themes
+
+`/skin` lists the presets; `/skin <name>` applies one. A preset sets every color option above and switches Claude Code's own theme to dark or light to match. It changes the same settings `/plugin configure` does, so the mod reloads with the new colors, and `/skin default` brings back the defaults.
+
+| Preset | Theme | `accent` | `surface` | `toolBar` | `error` | `muted` | `command` | `background` |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `default` | dark | `#f0a6ec` | `#24242c` | `#55555f` | `#ff6b5b` | `#7f7f8a` | `bashBorder` | `#1c1c22` |
+| `tokyonight` | dark | `#bb9af7` | `#1f2335` | `#414868` | `#f7768e` | `#737aa2` | `#7dcfff` | `#16161e` |
+| `catppuccin-mocha` | dark | `#cba6f7` | `#313244` | `#585b70` | `#f38ba8` | `#9399b2` | `#94e2d5` | `#181825` |
+| `catppuccin-latte` | light | `#8839ef` | `#ccd0da` | `#acb0be` | `#d20f39` | `#5c5f77` | `#179299` | `#e6e9ef` |
+| `gruvbox-dark` | dark | `#fabd2f` | `#3c3836` | `#665c54` | `#fb4934` | `#a89984` | `#8ec07c` | `#1d2021` |
+| `nord` | dark | `#88c0d0` | `#3b4252` | `#4c566a` | `#bf616a` | `#81a1c1` | `#a3be8c` | `#2e3440` |
+| `rose-pine` | dark | `#c4a7e7` | `#26233a` | `#403d52` | `#eb6f92` | `#908caa` | `#9ccfd8` | `#191724` |
+| `rose-pine-dawn` | light | `#907aa9` | `#f2e9e1` | `#cecacd` | `#b4637a` | `#797593` | `#56949f` | `#faf4ed` |
+| `kanagawa-wave` | dark | `#d27e99` | `#2a2a37` | `#54546d` | `#e46876` | `#938aa9` | `#7fb4ca` | `#16161d` |
+| `everforest` | dark | `#a7c080` | `#343f44` | `#475258` | `#e67e80` | `#9da9a0` | `#83c092` | `#232a2e` |
+| `one-dark` | dark | `#61afef` | `#2c313c` | `#3e4451` | `#e06c75` | `#828997` | `#56b6c2` | `#21252b` |
+
+A setting that something else controls, such as a theme fixed by managed settings, is left as it is, and `/skin` names it in its reply.
+
 ## Status panel
 
 In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). It runs `~/.claude/statusline.sh` and draws each ` | ` separated part on its own row, leaving out the `5h:` and `7d:` parts and the context bar, which the ◷ Usage and ◔ Context sections replace. Under the rows, each section once it has something to show:

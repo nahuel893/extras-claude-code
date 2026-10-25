@@ -1,6 +1,7 @@
 import type { Register } from 'claude-code'
 import { drawFramedCommands, SHELL_FENCE_RULE, splitCommands, type Segment } from './commands'
 import { drawReply, drawSummary, registerOpencode } from './opencode'
+import { registerSkin } from './skin'
 import { registerStatusPanel } from './statusline'
 import { readSwitches, readTheme } from './theme'
 
@@ -27,6 +28,9 @@ export const register: Register = (on, options) => {
 
   // The status band above the prompt has its own switch, on unless explicitly false.
   if (options.statusPanel !== false) registerStatusPanel(on, theme, options)
+
+  // /skin switches every color at once, whichever parts are on.
+  registerSkin(on)
 
   // With both parts off the engine draws every reply as it would without the mod.
   if (!opencodeStyle && !commandFrames) return
