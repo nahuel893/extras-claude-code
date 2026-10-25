@@ -20,6 +20,8 @@ const BAND = {
   },
 } as const
 
+const FULLSCREEN_BAND = { ...BAND, viewport: { columns: 200, rows: 50, isFullscreen: true } } as const
+
 test("the status line script's output becomes styled spans, escape codes gone", async () => {
   const [first, second] = outputLines(SCRIPT_OUTPUT).map(parseAnsi)
 
@@ -111,11 +113,17 @@ test('docked in fullscreen, the panel marks the session so the script leaves the
     return <Text>engine</Text>
   })
 
+  // The band can draw before session.start has read the session id: a later draw marks it.
+  const early = await $.ui.mount({ ...FULLSCREEN_BAND, surface: 'terminal' })
+  await early.findAll({ type: 'Text' })
+  await early.unmount()
+  expect(writes).toEqual([])
+
   await $.session.start({ cwd: '/project', surface: 'terminal', isInteractive: true })
-  const ui = await $.ui.mount({ ...BAND, surface: 'terminal', viewport: { columns: 200, rows: 50, isFullscreen: true } })
+  const ui = await $.ui.mount({ ...FULLSCREEN_BAND, surface: 'terminal' })
   await ui.findAll({ type: 'Text' })
 
-  expect(writes).toContain('/home/test/.cache/openskin/docked/session-1')
+  expect(writes).toEqual(['/home/test/.cache/openskin/docked/session-1'])
   await ui.unmount()
 })
 

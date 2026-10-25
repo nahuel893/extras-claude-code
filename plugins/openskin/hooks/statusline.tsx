@@ -246,12 +246,19 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
   // Only the fullscreen layout docks a pane beside the transcript; elsewhere a pane
   // would take rows above the prompt, so the status line stays where it is.
   let isOpened = false
+  let isMarked = false
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.viewport?.isFullscreen === true && !isOpened) {
       isOpened = true
       void $.ui.open({ id: PANE, title: 'Status' })
-      // The panel shows the status line now: the script leaves Claude Code's own one empty.
-      if (dockedMark) void $.fs.write(dockedMark, '').catch(() => {})
+    }
+    // The panel shows the status line now: the script leaves Claude Code's own one empty.
+    // The first draws can come before session.start knows the mark, so a later one writes it.
+    if (isOpened && dockedMark && !isMarked) {
+      isMarked = true
+      void $.fs.write(dockedMark, '').catch(() => {
+        isMarked = false
+      })
     }
 
     return next(e)
