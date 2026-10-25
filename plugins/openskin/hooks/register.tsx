@@ -29,8 +29,9 @@ export const register: Register = (on, options) => {
   // The status band above the prompt has its own switch, on unless explicitly false.
   if (options.statusPanel !== false) registerStatusPanel(on, theme, options)
 
-  // /skin switches every color at once, whichever parts are on.
-  registerSkin(on)
+  // /skin switches every color at once, whichever parts are on; the same module follows
+  // outside edits of the settings file, so an open session takes them without /reload-plugins.
+  registerSkin(on, options)
 
   // With both parts off the engine draws every reply as it would without the mod.
   if (!opencodeStyle && !commandFrames) return

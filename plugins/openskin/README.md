@@ -74,6 +74,8 @@ With `opencodeStyle` off and `commandFrames` on, Claude Code keeps its own trans
 
 A setting that something else controls, such as a theme fixed by managed settings, is left as it is, and `/skin` names it in its reply.
 
+Edits made outside Claude Code, such as a desktop theme script rewriting `~/.claude/settings.json`, reach open sessions by themselves within a few seconds. A session that has stopped following the file (one started before the file was replaced, say by a symlink into a dotfiles repository) gets a `/reload-plugins` from openskin when its colors or theme fall behind.
+
 ## Status panel
 
 In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). Every part of it is a card: a rounded border in the `toolBar` color with the card's title drawn in its top edge, the cards stacked with no blank row between them, labels in the `muted` color and values bold.

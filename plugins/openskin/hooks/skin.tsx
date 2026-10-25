@@ -1,4 +1,5 @@
-import type { EngineInterface, On } from 'claude-code'
+import type { EngineInterface, On, PluginOptions } from 'claude-code'
+import { startFollowing } from './follow'
 import { THEME_DEFAULTS, type Theme, UNSKINNED } from './theme'
 
 /**
@@ -50,11 +51,16 @@ async function applyPreset($: EngineInterface, name: string, preset: Preset) {
 /**
  * `/skin`: lists the presets, and `/skin <name>` applies one. The command is registered at
  * the start of an interactive session; the matcher keeps this `session.start` apart from the
- * status panel's, as a module may hook an event only once without one.
+ * status panel's, as a module may hook an event only once without one. The same start begins
+ * following the settings file (`./follow`), whether the status panel is on or not.
  */
-export const registerSkin = (on: On) => {
+export const registerSkin = (on: On, options: PluginOptions) => {
+  // While /skin writes, the follower waits: those writes reload the mod by themselves.
+  let isApplying = false
+
   on('session.start', { isInteractive: true }, async ($, e, next) => {
     await $.command.register({ name: 'skin', description: "Switch openskin's colors to a preset", argumentHint: '[preset]' })
+    await startFollowing($, options, () => isApplying).catch(() => undefined)
     return next(e)
   })
 
@@ -66,6 +72,11 @@ export const registerSkin = (on: On) => {
     const preset = PRESETS[name]
     if (!preset) return { text: `No preset named "${name}". Presets:\n${presetList()}` }
 
-    return { text: await applyPreset($, name, preset) }
+    isApplying = true
+    try {
+      return { text: await applyPreset($, name, preset) }
+    } finally {
+      isApplying = false
+    }
   })
 }
