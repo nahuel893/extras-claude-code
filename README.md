@@ -4,14 +4,38 @@
 
 Mods for [Claude Code](https://claude.com/claude-code) that make its terminal interface nicer to live in. Each one installs on its own.
 
-| Mod | What it does |
-| --- | --- |
-| [openskin](plugins/openskin) | An OpenCode-style look for the transcript: your prompts and tool calls in barred blocks, Claude's replies on a band of their own, framed shell commands and a `▣ Claude · model · time` footer. Every color is an option. |
-| [command-register](plugins/command-register) | Every shell command Claude gives goes into a numbered register. `/cc` lists them above the prompt and a digit copies one; `/cc <n>` copies command n. No more selecting commands with the mouse. |
-| [board](plugins/board) | A living board per project: `/board` asks a model to rewrite the list of what is done (`✓`), pending (`○`) and waiting on your decision (`◇`) from the conversation, and keeps it in a file the openskin panel shows. |
-| [summarize](plugins/summarize) | `/summ` asks a model for a short summary of the session (the goal, what happened, the decisions, where it stands) and keeps it in a file per session that the openskin panel shows. |
+![openskin's status panel docked beside a session](assets/screenshot.jpeg)
 
-![openskin's docked status panel beside a session](assets/screenshot.jpeg)
+## The mods
+
+### [openskin](plugins/openskin): a new look and a status panel
+
+- **OpenCode-style transcript**: your prompts and tool calls in barred blocks, Claude's replies on a band of their own, framed shell commands, and a `▣ Claude · model · time` footer on every turn.
+- **Status panel** beside the transcript in fullscreen (`/panel` opens it anywhere), made of cards:
+  - **✿ Status**: directory, branch, uncommitted changes, and your status line's output.
+  - **◔ Context**: a colored bar showing how full the context window is.
+  - **⇅ Tokens**: the last turn's tokens and the session total.
+  - **◷ Usage**: the 5-hour and weekly subscription windows.
+  - **≡ Board** and **¶ Summary**, when the mods below are installed.
+- **Themes with `/skin`**: ten presets (Tokyo Night, Catppuccin Mocha and Latte, Gruvbox, Nord, Rose Pine and Dawn, Kanagawa, Everforest, One Dark), plus the default. Every color is also an option, including the panel background.
+- **Follows your desktop**: when a script changes the colors in `settings.json`, open sessions pick them up within seconds.
+
+### [command-register](plugins/command-register): copy commands without the mouse
+
+- Every shell command Claude gives goes into a numbered register.
+- **`/cc`** lists them above the prompt, and a digit copies one. **`/cc <n>`** copies command n directly.
+
+### [board](plugins/board): what is done, pending and waiting on you
+
+- **`/board`** asks a model (Haiku by default) to rewrite the project's board from the conversation: done `✓`, pending `○`, and waiting on your decision `◇`.
+- One board per project, kept in a file, and shown in the openskin panel.
+
+### [summarize](plugins/summarize): the session in a few lines
+
+- **`/summ`** asks a model (Haiku by default) for a short summary of the session: the goal, what happened, the decisions, and where it stands.
+- One summary per session, kept in a file, and shown in the openskin panel.
+
+Each mod installs on its own and works without the others. board and summarize only add cards to the panel when openskin is there.
 
 Unofficial: not affiliated with Anthropic or OpenCode.
 
