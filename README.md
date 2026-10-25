@@ -18,7 +18,7 @@
 ### [openskin](plugins/openskin): a new look and a status panel
 
 - **OpenCode-style transcript**: your prompts and tool calls in barred blocks, Claude's replies on a band of their own, framed shell commands, and a `▣ Claude · model · time` footer on every turn.
-- **Status panel** beside the transcript in fullscreen (`/panel` opens it anywhere), made of cards:
+- **Status panel** beside the transcript in fullscreen (`/panel` opens it anywhere), inspired by the side panel of [Gentle Shell](https://github.com/Gentleman-Programming/gentle-shell). It is made of cards:
   - **✿ Status**: directory, branch, uncommitted changes, and your status line's output.
   - **◔ Context**: a colored bar showing how full the context window is.
   - **⇅ Tokens**: the last turn's tokens and the session total.
