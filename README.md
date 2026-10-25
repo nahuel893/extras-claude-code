@@ -1,6 +1,6 @@
-<p align="center"><img src="assets/banner.png" alt="extras-claude-code" width="100%"></p>
+<p align="center"><img src="assets/banner.png" alt="refined-claude-code" width="100%"></p>
 
-# extras-claude-code
+# refined-claude-code
 
 Mods for [Claude Code](https://claude.com/claude-code) that make its terminal interface nicer to live in. Each one installs on its own.
 
@@ -28,7 +28,7 @@ Mods for [Claude Code](https://claude.com/claude-code) that make its terminal in
 ### [board](plugins/board): what is done, pending and waiting on you
 
 - **`/board`** asks a model (Haiku by default) to rewrite the session's board from the conversation: done `✓`, pending `○`, and waiting on your decision `◇`.
-- One board per session, kept in a file under the project (`~/.cache/extras-claude-code/projects/<project slug>/<session id>/board.md`), and shown in the openskin panel.
+- One board per session, kept in a file under the project (`~/.cache/refined-claude-code/projects/<project slug>/<session id>/board.md`), and shown in the openskin panel.
 
 ### [summarize](plugins/summarize): the session in a few lines
 
@@ -44,19 +44,19 @@ Unofficial: not affiliated with Anthropic or OpenCode.
 Add the marketplace once, at the prompt of a Claude Code terminal session:
 
 ```
-/plugin marketplace add nahuel893/extras-claude-code
+/plugin marketplace add nahuel893/refined-claude-code
 ```
 
 Then install the mods you want:
 
 ```
-/plugin install openskin@extras-claude-code
-/plugin install command-register@extras-claude-code
-/plugin install board@extras-claude-code
-/plugin install summarize@extras-claude-code
+/plugin install openskin@refined-claude-code
+/plugin install command-register@refined-claude-code
+/plugin install board@refined-claude-code
+/plugin install summarize@refined-claude-code
 ```
 
-From a shell, the same steps are `claude plugin marketplace add nahuel893/extras-claude-code` and `claude plugin install <mod>@extras-claude-code`.
+From a shell, the same steps are `claude plugin marketplace add nahuel893/refined-claude-code` and `claude plugin install <mod>@refined-claude-code`.
 
 Each mod's README lists its options and limits.
 

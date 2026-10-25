@@ -20,7 +20,7 @@ Unofficial: not affiliated with OpenCode or Anthropic.
 At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install openskin --marketplace nahuel893/extras-claude-code
+/plugin install openskin --marketplace nahuel893/refined-claude-code
 ```
 
 Answer `y` to add the marketplace, then pick a scope (user scope loads it in every session).
@@ -28,14 +28,14 @@ Answer `y` to add the marketplace, then pick a scope (user scope loads it in eve
 From a shell:
 
 ```bash
-claude plugin install openskin --marketplace nahuel893/extras-claude-code
+claude plugin install openskin --marketplace nahuel893/refined-claude-code
 ```
 
-In the desktop app, where `/plugin` does not run: click + next to the prompt box, then Plugins, Add marketplace with `nahuel893/extras-claude-code`, then Add plugin.
+In the desktop app, where `/plugin` does not run: click + next to the prompt box, then Plugins, Add marketplace with `nahuel893/refined-claude-code`, then Add plugin.
 
 ## Options
 
-Change them with `/plugin configure openskin@extras-claude-code`. A color is a hex such as `#f0a6ec`, a color name, or a Claude Code theme key such as `bashBorder`.
+Change them with `/plugin configure openskin@refined-claude-code`. A color is a hex such as `#f0a6ec`, a color name, or a Claude Code theme key such as `bashBorder`.
 
 | Option | Default | What it does |
 | --- | --- | --- |
@@ -91,7 +91,7 @@ Then each card once it has something to show:
 - **≡ Board · 2 of 5**: the session's board from the [board](../board) mod, one row per item, its title counting the done ones. A done item (`✓`) is struck through and dim, a pending one (`○`) plain, and one waiting on your decision (`◇`) has its mark in the accent color. Long items wrap.
 - **¶ Summary**: the session's summary from the [summarize](../summarize) mod, wrapped to the panel's width, never cut.
 
-The last two need those mods. Both write into the session's folder under its project, `~/.cache/extras-claude-code/projects/<project slug>/<session id>/`: `/board` writes `board.md` and `/summ` writes `summary.md`. The panel reads only the current session's files, never another session's. The panel checks both files every 1.5 seconds and redraws a section when its file changes. With no file, or an empty one, the card is left out.
+The last two need those mods. Both write into the session's folder under its project, `~/.cache/refined-claude-code/projects/<project slug>/<session id>/`: `/board` writes `board.md` and `/summ` writes `summary.md`. The panel reads only the current session's files, never another session's. The panel checks both files every 1.5 seconds and redraws a section when its file changes. With no file, or an empty one, the card is left out.
 
 ### Feeding the panel from your status line script
 

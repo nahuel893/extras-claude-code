@@ -11,10 +11,10 @@ asked to keep it: it costs no tokens and nothing gets forgotten.
 At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install command-register --marketplace nahuel893/extras-claude-code
+/plugin install command-register --marketplace nahuel893/refined-claude-code
 ```
 
-Answer `y` to add the marketplace, then pick a scope (user scope loads it in every session). From a shell: `claude plugin install command-register --marketplace nahuel893/extras-claude-code`.
+Answer `y` to add the marketplace, then pick a scope (user scope loads it in every session). From a shell: `claude plugin install command-register --marketplace nahuel893/refined-claude-code`.
 
 ## Usage
 

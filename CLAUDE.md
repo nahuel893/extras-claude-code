@@ -1,10 +1,10 @@
-# extras-claude-code
+# refined-claude-code
 
 Claude Code mods (function-hooks plugins) published as one marketplace. Public repository, MIT.
 
 ## Layout
 
-- `.claude-plugin/marketplace.json`: marketplace `extras-claude-code`, one entry per mod with its version. Bump the version here and in the mod's own `plugin.json` together.
+- `.claude-plugin/marketplace.json`: marketplace `refined-claude-code`, one entry per mod with its version. Bump the version here and in the mod's own `plugin.json` together.
 - `plugins/<mod>/`: one mod per folder. Each has `.claude-plugin/plugin.json`, `hooks/hooks.json` (exactly one module, usually `./register.tsx`), `hooks/*.tsx`, `tests/*.test.tsx`, `types/index.d.ts` when it keeps `$.state`, and a `README.md`.
 - `docs/notes/engine-gotchas.md`: what the mod engine does that is not obvious. Read it before touching render or loading code.
 - `odd/tasks/<feature>.md`: one ODD feature document per feature (objective, scope, checklist with task IDs, evidence, commits). `odd/handoff-*.md`: session handoffs with the state of work in flight.
@@ -18,8 +18,8 @@ Claude Code mods (function-hooks plugins) published as one marketplace. Public r
   - `/skin`, which offers 11 theme presets and writes the colors through `$.config.set`.
   - `panelBackground`, which paints inside the engine's grey pane frame.
 - **command-register**: `/cc` lists the shell commands Claude gave, and a digit copies one; `/cc <n>` copies command n.
-- **board**: `/board` asks a model (Haiku by default, configurable) to rewrite this session's done `✓` / pending `○` / waiting `◇` list into `~/.cache/extras-claude-code/projects/<cwd slug>/<session id>/board.md`. A new session starts from an empty board.
-- **summarize**: `/summ` asks a model (Haiku by default, configurable) for a session summary in `~/.cache/extras-claude-code/projects/<cwd slug>/<session id>/summary.md`.
+- **board**: `/board` asks a model (Haiku by default, configurable) to rewrite this session's done `✓` / pending `○` / waiting `◇` list into `~/.cache/refined-claude-code/projects/<cwd slug>/<session id>/board.md`. A new session starts from an empty board.
+- **summarize**: `/summ` asks a model (Haiku by default, configurable) for a session summary in `~/.cache/refined-claude-code/projects/<cwd slug>/<session id>/summary.md`.
 
 The cwd slug is the working directory with every `/` replaced by `-`. Each mod computes these paths itself; they share no code. The old `board/<slug>.md` and `summaries/<session id>.md` files are not read, moved or deleted.
 

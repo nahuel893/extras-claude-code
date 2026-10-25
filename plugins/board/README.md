@@ -16,10 +16,10 @@ Nothing runs on its own. You type `/board` when you want the board brought up to
 At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install board --marketplace nahuel893/extras-claude-code
+/plugin install board --marketplace nahuel893/refined-claude-code
 ```
 
-Answer `y` to add the marketplace, then pick a scope (user scope loads it in every session). From a shell: `claude plugin install board --marketplace nahuel893/extras-claude-code`.
+Answer `y` to add the marketplace, then pick a scope (user scope loads it in every session). From a shell: `claude plugin install board --marketplace nahuel893/refined-claude-code`.
 
 ## Usage
 
@@ -50,11 +50,11 @@ One file per session, in a folder per project. The project's folder is the sessi
 directory with every `/` turned into `-`, and the session's folder is its id:
 
 ```
-~/.cache/extras-claude-code/projects/<slug>/<session id>/board.md
+~/.cache/refined-claude-code/projects/<slug>/<session id>/board.md
 ```
 
 For a session `abc-123` in `/home/user/projects/app` that is
-`~/.cache/extras-claude-code/projects/-home-user-projects-app/abc-123/board.md`. Each session keeps
+`~/.cache/refined-claude-code/projects/-home-user-projects-app/abc-123/board.md`. Each session keeps
 its own board, and the file stays after the session ends, next to the other boards of the project.
 The [summarize](../summarize) mod writes its `summary.md` in the same session folder, and the
 [openskin](../openskin) mod shows both in its status panel.
@@ -64,7 +64,7 @@ files are no longer read, moved or deleted.
 
 ## Options
 
-Change them with `/plugin configure board@extras-claude-code`.
+Change them with `/plugin configure board@refined-claude-code`.
 
 | Option | Default | What it does |
 | --- | --- | --- |

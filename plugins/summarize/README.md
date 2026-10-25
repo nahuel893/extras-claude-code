@@ -11,10 +11,10 @@ Nothing runs on its own. You type `/summ` when you want the summary written or b
 At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install summarize --marketplace nahuel893/extras-claude-code
+/plugin install summarize --marketplace nahuel893/refined-claude-code
 ```
 
-Answer `y` to add the marketplace, then pick a scope (user scope loads it in every session). From a shell: `claude plugin install summarize --marketplace nahuel893/extras-claude-code`.
+Answer `y` to add the marketplace, then pick a scope (user scope loads it in every session). From a shell: `claude plugin install summarize --marketplace nahuel893/refined-claude-code`.
 
 ## Usage
 
@@ -35,11 +35,11 @@ One file per session, in a folder per project. The project's folder is the sessi
 directory with every `/` turned into `-`, and the session's folder is its id:
 
 ```
-~/.cache/extras-claude-code/projects/<slug>/<session id>/summary.md
+~/.cache/refined-claude-code/projects/<slug>/<session id>/summary.md
 ```
 
 For a session `abc-123` in `/home/user/projects/app` that is
-`~/.cache/extras-claude-code/projects/-home-user-projects-app/abc-123/summary.md`. The
+`~/.cache/refined-claude-code/projects/-home-user-projects-app/abc-123/summary.md`. The
 [board](../board) mod writes its `board.md` in the same session folder, and the
 [openskin](../openskin) mod shows both in its status panel.
 
@@ -48,7 +48,7 @@ longer read, moved or deleted.
 
 ## Options
 
-Change them with `/plugin configure summarize@extras-claude-code`.
+Change them with `/plugin configure summarize@refined-claude-code`.
 
 | Option | Default | What it does |
 | --- | --- | --- |
