@@ -55,11 +55,29 @@ With `opencodeStyle` off and `commandFrames` on, Claude Code keeps its own trans
 
 ## Status panel
 
-In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). It runs `~/.claude/statusline.sh` and draws each ` | ` separated part on its own row, leaving out the `5h:` and `7d:` parts, which the Usage section replaces. Under the rows, each section once it has something to show:
+In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). It runs `~/.claude/statusline.sh` and draws each ` | ` separated part on its own row, leaving out the `5h:` and `7d:` parts and the context bar, which the Usage and Context sections replace. Under the rows, each section once it has something to show:
 
 - **Context**: how full the context window is, gray, yellow from `contextWarnAt` and red from `contextDangerAt`. Before the session's first response it is counted once as `/context` does and shown with a `~`.
 - **Tokens**: the last turn's input (`↑`), output (`↓`) and cache tokens, then the session's running total.
 - **Usage**: the subscription's 5-hour and weekly windows, a bar yellow from 75% and red from 90%, and the time until each resets. Every open session shares the latest reading. Off a subscription there is nothing to show.
+
+### Feeding the panel from your status line script
+
+The panel reads the input Claude Code last gave your script, so the script has to keep it. Add this near the top of `~/.claude/statusline.sh`, after it reads stdin into `$input`:
+
+```bash
+SESSION_ID=$(jq -r '.session_id // empty' <<<"$input")
+if [ -n "$SESSION_ID" ]; then
+  OPENSKIN=~/.cache/openskin
+  mkdir -p "$OPENSKIN/sessions" &&
+    printf '%s' "$input" >"$OPENSKIN/sessions/$SESSION_ID.json.tmp" &&
+    mv -f "$OPENSKIN/sessions/$SESSION_ID.json.tmp" "$OPENSKIN/sessions/$SESSION_ID.json"
+  # Docked, the panel shows the status line: leave Claude Code's own one empty.
+  [ -z "$OPENSKIN_PANEL" ] && [ -e "$OPENSKIN/docked/$SESSION_ID" ] && exit 0
+fi
+```
+
+Once the panel docks it creates `~/.cache/openskin/docked/<session id>`, and the last line keeps the status line under the prompt empty for that session; the panel runs the script with `OPENSKIN_PANEL=1` to get the lines it draws. Drop that line to keep both. To make fullscreen the default for every session, set `"tui": "fullscreen"` in `~/.claude/settings.json`.
 
 ## Limits
 
