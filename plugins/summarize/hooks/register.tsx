@@ -10,7 +10,8 @@ const TRANSCRIPT_CHARS = 60_000
 const TIMEOUT_MS = 120_000
 
 /**
- * Writes this session's summary: the conversation to the model, its reply to the session's file.
+ * Writes this session's summary: the conversation to the model, its reply to the session's file
+ * under its project.
  * Every outcome is a toast, as nobody waits on the command's line by then.
  */
 async function summarize($: EngineInterface, model: string) {
@@ -26,7 +27,7 @@ async function summarize($: EngineInterface, model: string) {
       $.ui.toast('Summary not updated: HOME is not set')
       return
     }
-    const path = summaryPath(home, await $.session.id())
+    const path = summaryPath(home, await $.session.cwd(), await $.session.id())
 
     const reply = await $.model.complete({ model, system: SYSTEM, prompt: promptOf(transcript), timeoutMs: TIMEOUT_MS })
     if (!reply.isAnswered) {

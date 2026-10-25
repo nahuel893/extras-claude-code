@@ -1,7 +1,7 @@
 import { expect, mock, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 import type { Engine } from 'claude-code/testing'
-import { summaryPath, summaryText, transcriptOf } from '../hooks/summary'
+import { slugOf, summaryPath, summaryText, transcriptOf } from '../hooks/summary'
 
 const USAGE = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 }
 
@@ -12,7 +12,7 @@ type World = {
 }
 
 /**
- * Stands in for the engine beneath the mod: the session's home, id and conversation, the model,
+ * Stands in for the engine beneath the mod: the session's home, directory, id and conversation, the model,
  * the file system and the toasts, each recorded so a test reads what `/summ` did.
  */
 const world = async ($: Engine, on: On, { reply = { text: 'The goal was a parser. It is written.' }, messages }: World = {}) => {
@@ -21,6 +21,7 @@ const world = async ($: Engine, on: On, { reply = { text: 'The goal was a parser
   const writes: { path: string; text: string }[] = []
   const toasts: string[] = []
   on('env.get', () => ({ value: '/home/test' }))
+  on('session.cwd', () => ({ value: '/home/test/projects/app' }))
   on('session.id', () => ({ value: 'session-1' }))
   on('session.messages', () => ({
     value: (messages ?? [
@@ -57,8 +58,15 @@ const world = async ($: Engine, on: On, { reply = { text: 'The goal was a parser
   }
 }
 
-test('the summary file is named after the session id', async () => {
-  expect(summaryPath('/home/user', 'abc-123')).toBe('/home/user/.cache/extras-claude-code/summaries/abc-123.md')
+test("the summary file is in the session's folder, under the project's slug", async () => {
+  expect(slugOf('/home/user/projects/x')).toBe('-home-user-projects-x')
+  expect(summaryPath('/home/user', '/home/user/projects/x', 'abc-123')).toBe(
+    '/home/user/.cache/extras-claude-code/projects/-home-user-projects-x/abc-123/summary.md',
+  )
+})
+
+test('two sessions in the same project keep two summaries', async () => {
+  expect(summaryPath('/home/user', '/home/user/projects/x', 'one')).not.toBe(summaryPath('/home/user', '/home/user/projects/x', 'two'))
 })
 
 test("the summary is the model's reply trimmed, a leading heading dropped", async () => {
@@ -88,7 +96,10 @@ test('/summ answers at once, then writes the summary and says so', async ($, on)
   expect(asked[0]?.prompt).toContain('User: Write the parser.')
   expect(asked[0]?.system).toContain('150 words')
   expect(writes).toEqual([
-    { path: '/home/test/.cache/extras-claude-code/summaries/session-1.md', text: 'The goal was a parser. It is written.\n' },
+    {
+      path: '/home/test/.cache/extras-claude-code/projects/-home-test-projects-app/session-1/summary.md',
+      text: 'The goal was a parser. It is written.\n',
+    },
   ])
   expect(toasts).toEqual(['Summary updated'])
 })

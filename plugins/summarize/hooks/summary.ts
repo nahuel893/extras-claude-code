@@ -1,8 +1,11 @@
-/** Where the summaries live under the home directory, one file per session. */
-const SUMMARIES = '.cache/extras-claude-code/summaries'
+/** Where the projects live under the home directory, a folder per session in each. */
+const PROJECTS = '.cache/extras-claude-code/projects'
 
-/** The summary file of the session `id`. */
-export const summaryPath = (home: string, id: string) => `${home}/${SUMMARIES}/${id}.md`
+/** A project's name on disk: its directory with every `/` a `-`, as `-home-user-projects-x`. */
+export const slugOf = (cwd: string) => cwd.replace(/\//g, '-')
+
+/** The summary file of session `id`, in the folder of the project in `cwd`. */
+export const summaryPath = (home: string, cwd: string, id: string) => `${home}/${PROJECTS}/${slugOf(cwd)}/${id}/summary.md`
 
 /** The summary out of the model's reply: trimmed, a leading markdown heading dropped. */
 export const summaryText = (reply: string) => reply.trim().replace(/^#{1,6}\s[^\n]*\n+/, '').trim()

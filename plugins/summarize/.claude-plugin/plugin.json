@@ -1,7 +1,7 @@
 {
   "name": "summarize",
-  "version": "0.1.0",
-  "description": "A summary of the session on demand: /summ asks a model for a short narrative of the goal, what happened, the decisions and where things stand, and keeps it in a file per session.",
+  "version": "0.2.0",
+  "description": "A summary of the session on demand: /summ asks a model for a short narrative of the goal, what happened, the decisions and where things stand, and keeps it in a file per session, under the project.",
   "author": { "name": "nahuel893" },
   "userConfig": {
     "model": {

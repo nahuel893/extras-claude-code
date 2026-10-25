@@ -30,7 +30,7 @@
       "name": "summarize",
       "source": "./plugins/summarize",
       "description": "A summary of the session on demand: /summ writes the goal, what happened, the decisions and where things stand.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "productivity"
     }
   ]
