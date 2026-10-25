@@ -48,6 +48,24 @@ Unofficial: not affiliated with Anthropic or OpenCode.
 
 ## Install
 
+### With the script
+
+From a clone, one command installs everything:
+
+```bash
+git clone https://github.com/nahuel893/refined-claude-code
+cd refined-claude-code
+scripts/install.sh
+```
+
+[`scripts/install.sh`](scripts/install.sh) installs git and Claude Code when they are missing, adds the marketplace and the four mods, then installs better-claude's narrator with a speech tool (speech-dispatcher on Linux when neither it nor espeak-ng is there). It is safe to run again. Options:
+
+- `--local`: add the clone as the marketplace instead of GitHub, so your edits apply after `/reload-plugins`.
+- `--no-narrator`: skip the narrator.
+- `--piper [locale]`: on Arch Linux, also give the narrator a Piper voice ([below](#a-natural-voice-for-the-narrator-on-arch-linux)).
+
+### By hand
+
 Add the marketplace once, at the prompt of a Claude Code terminal session:
 
 ```
