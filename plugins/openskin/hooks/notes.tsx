@@ -6,22 +6,25 @@ import type { Theme } from './theme'
 
 /**
  * The Board and Summary sections of the status panel, drawn from the files the board and
- * summarize mods write. Neither mod is needed: with no file there is no section. Each file is
- * polled on the status panel's timer, read again only when its mtime moves, and kept in `$.state`
- * for the panel to draw.
+ * summarize mods write for this session. Neither mod is needed: with no file there is no section.
+ * Each file is polled on the status panel's timer, read again only when its mtime moves, and kept
+ * in `$.state` for the panel to draw.
  */
-const BOARDS = '.cache/extras-claude-code/board'
-const SUMMARIES = '.cache/extras-claude-code/summaries'
+const PROJECTS = '.cache/extras-claude-code/projects'
 const MARKS = ['✓', '○', '◇']
 
 const board = atom({ plugin: 'openskin', key: 'board' } as const, [] as BoardLines)
 const summary = atom({ plugin: 'openskin', key: 'summary' } as const, '')
 
-/** The board of the project in `cwd` (its slug: every `/` a `-`) and the summary of session `id`. */
-export const notePaths = (home: string, cwd: string, id: string) => ({
-  board: `${home}/${BOARDS}/${cwd.replace(/\//g, '-')}.md`,
-  summary: `${home}/${SUMMARIES}/${id}.md`,
-})
+/**
+ * The board and the summary of session `id`, in its folder under the project in `cwd` (the
+ * project's slug: every `/` a `-`). Other sessions' files are never read.
+ */
+export const notePaths = (home: string, cwd: string, id: string) => {
+  const folder = `${home}/${PROJECTS}/${cwd.replace(/\//g, '-')}/${id}`
+
+  return { board: `${folder}/board.md`, summary: `${folder}/summary.md` }
+}
 
 /**
  * A board line as a row: the mark, a space, the item. A done item is struck through and dim, its

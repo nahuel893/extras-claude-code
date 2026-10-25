@@ -5,8 +5,9 @@ import { boardRow, notePaths } from '../hooks/notes'
 import { THEME_DEFAULTS } from '../hooks/theme'
 
 const HOME = '/home/test'
-const BOARD = `${HOME}/.cache/extras-claude-code/board/-home-test-projects-app.md`
-const SUMMARY = `${HOME}/.cache/extras-claude-code/summaries/session-1.md`
+const PROJECT = `${HOME}/.cache/extras-claude-code/projects/-home-test-projects-app`
+const BOARD = `${PROJECT}/session-1/board.md`
+const SUMMARY = `${PROJECT}/session-1/summary.md`
 
 const PANE = {
   plugin: 'openskin',
@@ -56,7 +57,7 @@ const texts = async ($: Engine) => {
   return all
 }
 
-test("the board file is the project's slug and the summary file the session id", async () => {
+test("both files are in the session's folder, under the project's slug", async () => {
   expect(notePaths(HOME, '/home/test/projects/app', 'session-1')).toEqual({ board: BOARD, summary: SUMMARY })
 })
 
@@ -93,6 +94,19 @@ test('the panel draws the board, one row per line, and the summary wrapped, afte
   const summary = (await ui.findAll({ type: 'Text', text: /^The goal was a parser/ }))[0]
   expect(summary?.props.wrap).toBe('wrap')
   await ui.unmount()
+})
+
+test("another session's files and the old per-project and per-session files are not drawn", async ($, on) => {
+  const { write } = world(on)
+  write(`${PROJECT}/session-0/board.md`, '○ Another session\n')
+  write(`${PROJECT}/session-0/summary.md`, 'Another session summary.\n')
+  write(`${HOME}/.cache/extras-claude-code/board/-home-test-projects-app.md`, '○ The old project board\n')
+  write(`${HOME}/.cache/extras-claude-code/summaries/session-1.md`, 'The old session summary.\n')
+  await startSession($)
+
+  const all = await texts($)
+  expect(all.some(text => text?.startsWith('≡ Board'))).toBe(false)
+  expect(all).not.toContain('¶ Summary')
 })
 
 test('an absent or empty file draws no section', async ($, on) => {
