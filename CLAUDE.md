@@ -17,7 +17,7 @@ Claude Code mods (function-hooks plugins) published as one marketplace. Public r
   - `/panel`, which opens the panel below 144 columns.
   - `/skin`, which offers 11 theme presets and writes the colors through `$.config.set`.
   - `panelBackground`, which paints inside the engine's grey pane frame.
-- **command-register**: `/cc` lists the shell commands Claude gave, and a digit copies one; `/cc <n>` copies command n.
+- **command-register**: `/cc` opens a framed dialog in the band with the shell commands Claude gave: a digit copies one, `▶` and a preview track the focused row, typing filters; `/cc <n>` copies command n.
 - **board**: `/board` asks a model (Haiku by default, configurable) to rewrite this session's done `✓` / pending `○` / waiting `◇` list into `~/.cache/refined-claude-code/projects/<cwd slug>/<session id>/board.md`. A new session starts from an empty board. Claude keeps the same file through the `mcp__board__board` tool (`add`, `done <n>`, `wait <n>`), with a one-line hint at session start, a reminder after `reminderTurns` quiet turns (default 5), and the numbered list once after an outside change. `/board` and the tool share an in-memory lock: tool calls wait at most about 7 s (the hook budget is 10 s), and a stale `done`/`wait` after a rewrite is refused with the new list.
 - **summarize**: `/summ` asks a model (Haiku by default, configurable) for a session summary in `~/.cache/refined-claude-code/projects/<cwd slug>/<session id>/summary.md`.
 
@@ -42,7 +42,7 @@ The panel reuses the user's status line script, which lives outside this repo:
   - `claude plugin test plugins/<mod>`
   - `tsc -p plugins/<mod>`, once the engine has laid the types in `.claude-plugin/types/` (gitignored).
 - Test-first for behavior changes. Observe RED, then GREEN. Regression tests sit next to the code they guard.
-- Last known test counts: openskin 98, command-register 17, board 28, summarize 9.
+- Last known test counts: openskin 98, command-register 32, board 28, summarize 9.
 - Artifacts (code, comments, docs, commit messages) are in English.
 
 ## Commits and publishing

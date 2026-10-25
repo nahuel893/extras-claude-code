@@ -35,8 +35,8 @@ Allowed edit surfaces: `plugins/command-register/{hooks,tests,types/index.d.ts,R
 
 - [x] T1 Tests for the render (frame, count, marker, preview, hint per focus state, filter, 9-row cap, width cut) and handlers; observe RED. Route: inline (single mod, one bounded writer already).
 - [x] T2 Implement register.tsx (atoms `focusKey`, `filter`; `ui.focus` hook; Input; preview); GREEN.
-- [ ] T3 Bump command-register 0.1.0 -> 0.2.0 (plugin.json, marketplace.json).
-- [ ] T4 README and CLAUDE.md (bullet, test count).
+- [x] T3 Bump command-register 0.1.0 -> 0.2.0 (plugin.json, marketplace.json).
+- [x] T4 README and CLAUDE.md (bullet, test count).
 
 ## Acceptance
 
@@ -50,3 +50,5 @@ Branch `feat/cc-dialog-band`. Engram mirror: `odd/cc-dialog-band/tasks` (PENDING
 ## Commits
 
 - feat(command-register): draw /cc as a framed dialog in the band (T1+T2). RED: 12 of 32 failed before register.tsx changed; GREEN: 32 pass.
+- chore(command-register): bump to 0.2.0 (T3).
+- docs(command-register): document the dialog (T4).
