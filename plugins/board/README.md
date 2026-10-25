@@ -1,7 +1,7 @@
 # board
 
-A Claude Code mod that keeps a living board per project: what is done, what is pending and what
-waits on your decision, pinned in a file instead of buried in an old reply.
+A Claude Code mod that keeps a living board per session: what is done, what is pending and what
+waits on your decision, pinned in a file under the project instead of buried in an old reply.
 
 ```
 ✓ Parser written and tested
@@ -28,7 +28,7 @@ background, so you can keep typing:
 
 1. The mod reads this session's conversation: your messages and Claude's replies, text only, up to
    the last 60,000 characters or so.
-2. It reads the project's previous board, if there is one.
+2. It reads this session's previous board, if there is one. A new session starts from an empty board.
 3. It asks a model to rewrite the board from both: still-valid items kept, finished ones marked done,
    new ones added, about 15 items at most, written in the language you talk to Claude in.
 4. It keeps only the lines that start with a mark and writes the file.
@@ -46,15 +46,21 @@ Each line starts with one mark:
 
 ## Where the board lives
 
-One file per project, keyed by the session's working directory with every `/` turned into `-`:
+One file per session, in a folder per project. The project's folder is the session's working
+directory with every `/` turned into `-`, and the session's folder is its id:
 
 ```
-~/.cache/extras-claude-code/board/<slug>.md
+~/.cache/extras-claude-code/projects/<slug>/<session id>/board.md
 ```
 
-For a session in `/home/user/projects/app` that is `~/.cache/extras-claude-code/board/-home-user-projects-app.md`.
-Every session in the same directory shares the board, so it carries over from one session to the
-next. The [openskin](../openskin) mod shows it in its status panel.
+For a session `abc-123` in `/home/user/projects/app` that is
+`~/.cache/extras-claude-code/projects/-home-user-projects-app/abc-123/board.md`. Each session keeps
+its own board, and the file stays after the session ends, next to the other boards of the project.
+The [summarize](../summarize) mod writes its `summary.md` in the same session folder, and the
+[openskin](../openskin) mod shows both in its status panel.
+
+Version 0.1.0 kept one board per project in `~/.cache/extras-claude-code/board/<slug>.md`. Those
+files are no longer read, moved or deleted.
 
 ## Options
 
