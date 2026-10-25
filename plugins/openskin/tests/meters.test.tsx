@@ -9,6 +9,7 @@ import { expect, mock, test } from 'claude-code/testing'
 import type { Engine } from 'claude-code/testing'
 import type { On, SessionContextUsage, SessionRateLimit } from 'claude-code'
 import { contextColor, contextRow } from '../hooks/meters/context'
+import { THEME_DEFAULTS } from '../hooks/theme'
 import { addTokens, short, tokenRows, tokensOf } from '../hooks/meters/tokens'
 import { until, usageColor, usageRow, windowsOf } from '../hooks/meters/usage'
 
@@ -77,18 +78,34 @@ test('the tokens section: the turn in color, the session total dim', async () =>
 
 // --- Context ------------------------------------------------------------------
 
-test('the context fill is gray under 50%, yellow from 50%, red from 75%', async () => {
-  expect(contextColor(49.9, 50, 75)).toBeUndefined()
-  expect(contextColor(50, 50, 75)).toBe('warning')
-  expect(contextColor(74, 50, 75)).toBe('warning')
-  expect(contextColor(75, 50, 75)).toBe('error')
-  expect(contextColor(40, 30, 60)).toBe('warning')
+const T = THEME_DEFAULTS
+
+test('the context bar is the accent under 50%, yellow from 50%, the error color from 75%', async () => {
+  expect(contextColor(49.9, 50, 75, T)).toBe(T.accent)
+  expect(contextColor(50, 50, 75, T)).toBe('warning')
+  expect(contextColor(74, 50, 75, T)).toBe('warning')
+  expect(contextColor(75, 50, 75, T)).toBe(T.error)
+  expect(contextColor(40, 30, 60, T)).toBe('warning')
 })
 
-test('the context row rounds the fill and marks an estimate with ~', async () => {
-  expect(contextRow({ value: 30.4, isEstimate: false }, 50, 75)).toEqual([{ text: '30%', dimColor: true }])
-  expect(contextRow({ value: 16, isEstimate: true }, 50, 75)).toEqual([{ text: '~16%', dimColor: true }])
-  expect(contextRow({ value: 82, isEstimate: false }, 50, 75)).toEqual([{ text: '82%', color: 'error' }])
+test('the context row: a ten-cell bar, the rounded fill, then the tokens over the window', async () => {
+  expect(contextRow({ value: 26.7, isEstimate: false, tokens: 266921, window: 1000000 }, 50, 75, T)).toEqual([
+    { text: '███', color: T.accent },
+    { text: '░░░░░░░', color: T.muted },
+    { text: ' 27%' },
+    { text: ' (266921/1000000)', color: T.muted },
+  ])
+  expect(contextRow({ value: 82, isEstimate: false }, 50, 75, T)).toEqual([
+    { text: '████████', color: T.error },
+    { text: '░░', color: T.muted },
+    { text: ' 82%' },
+  ])
+})
+
+test('an estimate is marked with ~, and an empty or full window draws no empty run', async () => {
+  expect(contextRow({ value: 16, isEstimate: true }, 50, 75, T).map(span => span.text)).toEqual(['██', '░░░░░░░░', ' ~16%'])
+  expect(contextRow({ value: 0, isEstimate: false }, 50, 75, T).map(span => span.text)).toEqual(['░░░░░░░░░░', ' 0%'])
+  expect(contextRow({ value: 120, isEstimate: false }, 50, 75, T).map(span => span.text)).toEqual(['██████████', ' 120%'])
 })
 
 // --- Usage --------------------------------------------------------------------
@@ -152,7 +169,10 @@ function world(on: On, context: SessionContextUsage = fill(), rateLimits: Sessio
   on('command.register', () => ({ value: { command: 'panel' } }))
   on('session.start', ($, e) => ({ cwd: e.cwd }))
   on('session.usage', ($, e) => {
-    const breakdown = e.breakdown !== undefined && live.estimate !== null ? { percentage: live.estimate } : undefined
+    const breakdown =
+      e.breakdown !== undefined && live.estimate !== null
+        ? { percentage: live.estimate, totalTokens: live.estimate * 2000, rawMaxTokens: WINDOW }
+        : undefined
     return { value: { startedAt: NOW, context: { ...live.context, breakdown }, rateLimits: live.rateLimits } as never }
   })
   on('session.measure', ($, e) => ({ changed: e.changed }))
@@ -183,7 +203,8 @@ test('the panel draws Context, Tokens and Usage sections under the status line',
 
   const ui = await $.ui.mount(PANE)
   expect(await ui.find({ type: 'Text', text: '◔ Context' })).toBeDefined()
-  expect(await span(ui, '30%')).toMatchObject({ props: { dimColor: true } })
+  expect(await span(ui, '███')).toMatchObject({ props: { color: THEME_DEFAULTS.accent } })
+  expect(await span(ui, ' 30%')).toBeDefined()
   expect(await ui.find({ type: 'Text', text: '⇅ Tokens' })).toBeDefined()
   expect((await span(ui, '↑'))?.props.color).toBe('suggestion')
   expect(await ui.find({ type: 'Text', text: 'session ↑ 1.2k  ↓ 340' })).toBeDefined()
@@ -218,12 +239,14 @@ test('the context section follows each measurement, yellow from 50% and red from
 
   await measure($, 58)
   let ui = await $.ui.mount(PANE)
-  expect(await span(ui, '58%')).toMatchObject({ props: { color: 'warning' } })
+  expect(await span(ui, '██████')).toMatchObject({ props: { color: 'warning' } })
+  expect(await span(ui, ' 58%')).toBeDefined()
+  expect(await span(ui, ' (116000/200000)')).toBeDefined()
   await ui.unmount()
 
   await measure($, 82)
   ui = await $.ui.mount(PANE)
-  expect(await span(ui, '82%')).toMatchObject({ props: { color: 'error' } })
+  expect(await span(ui, '████████')).toMatchObject({ props: { color: THEME_DEFAULTS.error } })
   await ui.unmount()
 })
 
@@ -232,7 +255,7 @@ test('the context thresholds are options', { options: { contextWarnAt: 20, conte
   await startSession($)
 
   const ui = await $.ui.mount(PANE)
-  expect(await span(ui, '30%')).toMatchObject({ props: { color: 'warning' } })
+  expect(await span(ui, '███')).toMatchObject({ props: { color: 'warning' } })
   await ui.unmount()
 })
 
@@ -242,7 +265,9 @@ test('with no figure yet the context is counted once, as /context does, and show
   await startSession($)
   await w.clock.advance(2000)
 
-  expect(await texts($)).toContain('~16%')
+  const all = await texts($)
+  expect(all).toContain(' ~16%')
+  expect(all).toContain(' (32000/200000)')
 })
 
 test('the tokens section adds up the turns of the session', async ($, on) => {

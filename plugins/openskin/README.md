@@ -42,7 +42,7 @@ Change them with `/plugin configure openskin@extras-claude-code`. A color is a h
 | `commandFrames` | `true` | Frames the shell commands in Claude's replies and asks Claude to tag them as shell blocks. |
 | `statusPanel` | `true` | The status panel beside the transcript in fullscreen; `/panel` opens it. |
 | `contextWarnAt` | `50` | The context fill, in percent, from which the panel's ◔ Context section turns yellow (time to `/compact`). |
-| `contextDangerAt` | `75` | The context fill from which it turns red (compact now or start a new session). |
+| `contextDangerAt` | `75` | The context fill from which it turns the error color (compact now or start a new session). |
 | `accent` | `#f0a6ec` | The bar beside your prompts and the square in the footer. |
 | `surface` | `#24242c` | The background of the prompt, tool and error blocks. |
 | `toolBar` | `#55555f` | The bar beside tool calls and their results. |
@@ -82,7 +82,7 @@ In the fullscreen layout the panel opens by itself beside the transcript (`/pane
 
 Then each card once it has something to show:
 
-- **◔ Context**: how full the context window is, gray, yellow from `contextWarnAt` and red from `contextDangerAt`. Before the session's first response it is counted once as `/context` does and shown with a `~`.
+- **◔ Context**: how full the context window is, as the status line's ten-cell bar (`██████░░░░ 58% (116000/200000)`, the tokens when known): filled cells in the `accent` color, yellow from `contextWarnAt` and the `error` color from `contextDangerAt`, empty cells `muted`. Before the session's first response it is counted once as `/context` does and shown with a `~`.
 - **⇅ Tokens**: the last turn's input (`↑`), output (`↓`) and cache tokens, then the session's running total.
 - **◷ Usage**: the subscription's 5-hour and weekly windows, a bar yellow from 75% and red from 90%, and the time until each resets. Every open session shares the latest reading. Off a subscription there is nothing to show.
 - **≡ Board · 2 of 5**: the project's board from the [board](../board) mod, one row per item, its title counting the done ones. A done item (`✓`) is struck through and dim, a pending one (`○`) plain, and one waiting on your decision (`◇`) has its mark in the accent color. Long items wrap.

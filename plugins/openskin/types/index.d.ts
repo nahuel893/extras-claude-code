@@ -24,10 +24,10 @@ export type Tokens = { input: number; output: number; cached: number }
 
 /**
  * The context window's fill, 0 to 100: the engine's figure from the last response, or, while it has
- * none (a fresh, resumed, compacted or rewound session), /context's count of it (`isEstimate`).
- * null when there is neither.
+ * none (a fresh, resumed, compacted or rewound session), /context's count of it (`isEstimate`), with
+ * the tokens in use over the window measured against when known. null when there is neither.
  */
-export type Fill = { value: number; isEstimate: boolean } | null
+export type Fill = { value: number; isEstimate: boolean; tokens?: number; window?: number } | null
 
 /** One rate-limit window of the subscription, as the last API response reported it. */
 export type Limit = { kind: string; percentUsed: number; resetsAt?: string }

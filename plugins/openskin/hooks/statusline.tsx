@@ -310,7 +310,7 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     const [lines, project, ...drawn] = await Promise.all([
       read($, statusLines),
       projectStatus($),
-      contextSection($, thresholds),
+      contextSection($, thresholds, theme),
       tokenSection($),
       usageSection($, columns),
       boardSection($, theme),
