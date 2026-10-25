@@ -23,9 +23,9 @@ Scrolling far up a long session with the wheel or PageUp is slow. The engine has
 - Test-first: RED, then GREEN. ~400 authored changed lines per task is a heuristic only.
 
 ## Tasks
-- [ ] T1 tracker, position math and column: pure `scrollbar.tsx` (tracker, thumb cells, click target, jump with deny handling, column drawing), recorded from the row hooks, drawn at the left of the panel, tests
-- [ ] T2 version: 0.9.0 in `plugins/openskin/.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
-- [ ] T3 docs: README status panel section, CLAUDE.md openskin bullet and test count
+- [x] T1 tracker, position math and column: pure `scrollbar.tsx` (tracker, thumb cells, click target, jump with deny handling, column drawing), recorded from the row hooks, drawn at the left of the panel, tests; commit 794bee1; RED: scrollbar.test.tsx failed to load (module missing), 98 pass 1 fail; GREEN 118 pass; tsc not run (not installed)
+- [x] T2 version: 0.9.0 in `plugins/openskin/.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`; commit 1f7c02b
+- [x] T3 docs: README status panel section, CLAUDE.md openskin bullet and test count 118; commit e10551d
 
 Route: delegated writer (bounded writer worker; multi-file).
 
@@ -43,7 +43,9 @@ Route: delegated writer (bounded writer worker; multi-file).
 - `tsc -p plugins/openskin` once engine types exist (not available here)
 
 ## Progress
-- 2026-10-25: branch `feat/transcript-scrollbar` created. Document created. Engram mirror: pending (topic `odd/transcript-scrollbar/tasks`).
+- 2026-10-25: branch `feat/transcript-scrollbar` created. Document created. Engram mirror saved under topic `odd/transcript-scrollbar/tasks` (auto-detected project `extras-claude-code`; the name `refined-claude-code` was refused as unknown).
+- 2026-10-25: T1-T3 done. Validate openskin and marketplace pass with warnings; tests 118 pass.
+- Engine limits met: an imported function that receives `$` must be a function declaration; the test kit cannot stand in for `$.ui.scroll` on a transcript row (no implementation), so the click-to-jump is proven only against a fake `$`.
 
 ## Next step
-T1: write the failing tests.
+Live check by the maintainer: click-to-jump on recent and very old messages (deny toast), thumb tracking while scrolling, row order as drawn on a resumed session, panel taller than the pane. Then merge or PR under ordinary policy.
