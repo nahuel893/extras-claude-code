@@ -1,5 +1,5 @@
 import { expect, mock, test } from 'claude-code/testing'
-import { outputLines, parseAnsi } from '../hooks/statusline'
+import { outputLines, panelRows, parseAnsi } from '../hooks/statusline'
 
 /** What `~/.claude/statusline.sh` printed for a real session, escape codes and all. */
 const SCRIPT_OUTPUT =
@@ -43,6 +43,41 @@ test('256-color, truecolor, bold, dim and other escapes', async () => {
   ])
 })
 
+
+test("the panel's rows leave out the status line's 5h and 7d parts, colored or not", async () => {
+  const lines = ['[Opus 5.5] | 🌿 main', '$1.20 | 5h:58% | \u001b[33m7d:24%\u001b[0m | ⏱ 3m']
+
+  expect(panelRows(lines)).toEqual(['[Opus 5.5]', '🌿 main', '$1.20', '⏱ 3m'])
+})
+
+test('the panel draws the status line without its 5h and 7d parts', async ($, on) => {
+  const clock = mock.clock(on, { now: 0 })
+  on('env.get', () => ({ value: '/home/test' }))
+  on('fs.stat', () => ({ value: { mtimeMs: 1 } as never }))
+  on('fs.read', () => ({ value: '{}' }))
+  on('process.run', () => ({ value: { exitCode: 0, stdout: '[Opus 5.5] | 5h:58% | 7d:24% | $1.20\n', stderr: '' } as never }))
+  on('command.register', () => ({ value: { command: 'panel' } }))
+  on('store.get', () => ({ value: undefined }))
+  on('session.start', ($, e) => ({ cwd: e.cwd }))
+  on('session.usage', () => ({ value: { startedAt: 0, context: { window: 200_000 }, rateLimits: [] } }))
+
+  await $.session.start({ cwd: '/project', surface: 'terminal', isInteractive: true })
+  // The first run of the script is not awaited by the start; the next tick finds it done.
+  await clock.advance(1500)
+  const ui = await $.ui.mount({
+    plugin: 'openskin',
+    component: 'Pane',
+    requestId: 'openskin-status',
+    surface: 'terminal',
+    props: { title: 'Status', isFocused: false, bodyColumns: 40, placement: 'dock', scroll: { offset: 0, bodyRows: 30 }, view: {} },
+  })
+  const texts = (await ui.findAll({ type: 'Text' })).map(text => text.text)
+
+  expect(texts).toContain('[Opus 5.5]')
+  expect(texts).toContain('$1.20')
+  expect(texts.some(text => /5h:|7d:/.test(text ?? ''))).toBe(false)
+  await ui.unmount()
+})
 
 test('with nothing stored the band is the engine alone', async ($, on) => {
   on('ui.render', ($, e) => {

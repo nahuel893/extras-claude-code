@@ -8,7 +8,9 @@ An OpenCode-style look for the Claude Code terminal transcript, as a Claude Code
 - Shell commands in a reply are framed, so they stand apart from the prose.
 - Each turn closes with a footer: `▣ Claude · <model> · <duration>`.
 
-Every color is an option, and each of the two parts (the OpenCode look and the command frames) can be switched off on its own.
+- In fullscreen, a status panel docks beside the transcript: your status line script's output, one row per part, and under it how full the context window is, each turn's tokens and your subscription's 5-hour and weekly windows.
+
+Every color is an option, and each part (the OpenCode look, the command frames, the status panel) can be switched off on its own.
 
 Unofficial: not affiliated with OpenCode or Anthropic.
 
@@ -38,6 +40,9 @@ Change them with `/plugin configure openskin@extras-claude-code`. A color is a h
 | --- | --- | --- |
 | `opencodeStyle` | `true` | The OpenCode look: prompt, tool and error blocks, the reply band, the turn footer. |
 | `commandFrames` | `true` | Frames the shell commands in Claude's replies and asks Claude to tag them as shell blocks. |
+| `statusPanel` | `true` | The status panel beside the transcript in fullscreen; `/panel` opens it. |
+| `contextWarnAt` | `50` | The context fill, in percent, from which the panel's Context section turns yellow (time to `/compact`). |
+| `contextDangerAt` | `75` | The context fill from which it turns red (compact now or start a new session). |
 | `accent` | `#f0a6ec` | The bar beside your prompts and the square in the footer. |
 | `surface` | `#24242c` | The background of the prompt, tool and error blocks. |
 | `toolBar` | `#55555f` | The bar beside tool calls and their results. |
@@ -47,6 +52,14 @@ Change them with `/plugin configure openskin@extras-claude-code`. A color is a h
 | `background` | `#1c1c22` | The band behind Claude's replies; `none` draws no band. |
 
 With `opencodeStyle` off and `commandFrames` on, Claude Code keeps its own transcript and only the commands are framed. With both off, the mod draws nothing.
+
+## Status panel
+
+In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). It runs `~/.claude/statusline.sh` and draws each ` | ` separated part on its own row, leaving out the `5h:` and `7d:` parts, which the Usage section replaces. Under the rows, each section once it has something to show:
+
+- **Context**: how full the context window is, gray, yellow from `contextWarnAt` and red from `contextDangerAt`. Before the session's first response it is counted once as `/context` does and shown with a `~`.
+- **Tokens**: the last turn's input (`↑`), output (`↓`) and cache tokens, then the session's running total.
+- **Usage**: the subscription's 5-hour and weekly windows, a bar yellow from 75% and red from 90%, and the time until each resets. Every open session shares the latest reading. Off a subscription there is nothing to show.
 
 ## Limits
 
@@ -58,6 +71,10 @@ A mod can only restyle what Claude Code lets it draw. The prompt input box has n
 claude plugin test .
 claude plugin validate .
 ```
+
+## Credits
+
+The panel's Context, Tokens and Usage sections are ported from three mods of [better-claude](https://github.com/midudev/better-claude) by Miguel Ángel Durán (midudev), MIT License: [context-meter](https://github.com/midudev/better-claude/tree/main/plugins/context-meter), [token-meter](https://github.com/midudev/better-claude/tree/main/plugins/token-meter) and [sub-meter](https://github.com/midudev/better-claude/tree/main/plugins/sub-meter). Their license and which files hold their code are in [NOTICE](NOTICE).
 
 ## License
 

@@ -6,7 +6,7 @@ import { readSwitches, readTheme } from './theme'
 
 export { splitCommands } from './commands'
 export { formatDuration, formatModel } from './opencode'
-export { color256, outputLines, parseAnsi } from './statusline'
+export { color256, outputLines, panelRows, parseAnsi } from './statusline'
 
 /** A reply kept whole, its shell blocks left in the markdown, for when commands are not framed. */
 const asProse = (text: string): Segment[] => (text.trim() ? [{ kind: 'prose', text: text.trim() }] : [])
@@ -26,7 +26,7 @@ export const register: Register = (on, options) => {
   if (opencodeStyle) registerOpencode(on, theme)
 
   // The status band above the prompt has its own switch, on unless explicitly false.
-  if (options.statusPanel !== false) registerStatusPanel(on, theme)
+  if (options.statusPanel !== false) registerStatusPanel(on, theme, options)
 
   // With both parts off the engine draws every reply as it would without the mod.
   if (!opencodeStyle && !commandFrames) return

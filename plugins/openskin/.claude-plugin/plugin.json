@@ -17,9 +17,21 @@
     },
     "statusPanel": {
       "type": "boolean",
-      "title": "Status line band",
-      "description": "Redraw your status line script's output in a band above the prompt, refreshed when Claude Code runs the script. Off leaves the band to Claude Code.",
+      "title": "Status panel",
+      "description": "In fullscreen, a panel beside the transcript with your status line script's output, one row per part, and the context window fill, each turn's tokens and your subscription usage under it. Off leaves the status line to Claude Code.",
       "default": true
+    },
+    "contextWarnAt": {
+      "type": "number",
+      "title": "Context warning fill",
+      "description": "The context window fill, in percent, from which the status panel's Context section turns yellow: a good moment for /compact.",
+      "default": 50
+    },
+    "contextDangerAt": {
+      "type": "number",
+      "title": "Context danger fill",
+      "description": "The context window fill, in percent, from which the status panel's Context section turns red: compact now or start a new session.",
+      "default": 75
     },
     "accent": {
       "type": "string",

@@ -1,0 +1,37 @@
+openskin includes code ported from better-claude
+https://github.com/midudev/better-claude
+
+- hooks/meters/tokens.tsx includes code from better-claude's token-meter
+  (plugins/token-meter/hooks/register.tsx).
+- hooks/meters/context.tsx includes code from better-claude's context-meter
+  (plugins/context-meter/hooks/register.tsx).
+- hooks/meters/usage.tsx includes code from better-claude's sub-meter
+  (plugins/sub-meter/hooks/register.tsx).
+- types/index.d.ts includes the Tokens, Fill and Limit types from those
+  mods' types/index.d.ts.
+- tests/meters.test.tsx adapts fixtures and test worlds from those mods'
+  hooks/register.test.tsx.
+
+better-claude is distributed under the following license:
+
+MIT License
+
+Copyright (c) 2026 Miguel Ángel Durán (midudev)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

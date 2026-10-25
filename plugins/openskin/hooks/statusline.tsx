@@ -1,14 +1,18 @@
 import { atom, read, update } from 'claude-code'
-import type { On } from 'claude-code'
-import { drawBlock } from './opencode'
+import type { On, PluginOptions } from 'claude-code'
+import { contextSection, measureContext, readThresholds, startContextMeter, stopContextMeter } from './meters/context'
+import { countTurn, startTokenMeter, tokenSection } from './meters/tokens'
+import { measureUsage, startUsageMeter, stopUsageMeter, usageSection } from './meters/usage'
 import type { Theme } from './theme'
 import type { StatusLines } from '../types'
 
 /**
- * The status line redrawn in a band above the prompt. Claude Code runs the person's
+ * The status panel docked beside the transcript in fullscreen. Claude Code runs the person's
  * `~/.claude/statusline.sh`, which keeps its latest input in SOURCE; a timer runs the
  * script again on that input whenever it changes and keeps the output in `$.state`,
- * which the band draws from (a render hook cannot write state itself).
+ * which the panel draws from (a render hook cannot write state itself). Under the status
+ * line the panel draws the meters of `./meters/` (context fill, tokens, subscription usage),
+ * whose hooks are registered here: a module takes one hook per event.
  */
 const SOURCE = '.cache/openskin/statusline.json'
 const SCRIPT = '.claude/statusline.sh'
@@ -22,6 +26,9 @@ const statusLines = atom({ plugin: 'openskin', key: 'statusLines' } as const, []
 export type Span = { text: string; color?: string; backgroundColor?: string; bold?: boolean; dimColor?: boolean }
 
 type Style = Omit<Span, 'text'>
+
+/** A block of the panel under the status line: a muted heading over rows of styled spans. */
+export type Section = { heading: string; rows: Span[][] }
 
 /** The eight standard colors by name, so they follow the terminal's own palette. */
 const STANDARD = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white']
@@ -134,8 +141,29 @@ export const outputLines = (stdout: string): StatusLines => {
   return lines
 }
 
-export const registerStatusPanel = (on: On, theme: Theme) => {
+/** The status line's parts the Usage section replaces: its 5-hour and weekly windows. */
+const LIMIT_PART = /^(5h|7d):/
+
+/** Text of a row with its escape codes gone. */
+const plain = (row: string) => parseAnsi(row).map(span => span.text).join('')
+
+/**
+ * The panel's rows: one per part of the status line, as a sidebar reads (the script's ` | `
+ * separators become line breaks), without the `5h:` and `7d:` parts.
+ */
+export const panelRows = (lines: StatusLines): string[] =>
+  lines
+    .flatMap(line => line.split(SEPARATOR))
+    .map(row => row.trim())
+    .filter(row => row && !LIMIT_PART.test(plain(row).trim()))
+
+export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions) => {
+  const thresholds = readThresholds(options)
+
   on('session.start', async ($, e, next) => {
+    // The meters drawn under the status line; one that fails leaves the others and the status line be.
+    await Promise.allSettled([startContextMeter($), startTokenMeter($), startUsageMeter($, e.isInteractive)])
+
     const home = await $.env.get('HOME')
     if (!home) return next(e)
 
@@ -179,6 +207,22 @@ export const registerStatusPanel = (on: On, theme: Theme) => {
     return next(e)
   })
 
+  on('session.end', ($, e, next) => {
+    stopContextMeter()
+    stopUsageMeter()
+    return next(e)
+  })
+
+  on('session.measure', async ($, e, next) => {
+    await Promise.all([measureContext($, e), measureUsage($, e.rateLimits)])
+    return next(e)
+  })
+
+  on('turn.complete', async ($, e, next) => {
+    await countTurn($, e.usage)
+    return next(e)
+  })
+
   on('command.run', { command: 'panel' }, async $ => {
     await $.ui.open({ id: PANE, title: 'Status' })
 
@@ -197,22 +241,38 @@ export const registerStatusPanel = (on: On, theme: Theme) => {
     return next(e)
   })
 
-  // One row per part of the status line, as a sidebar reads: the script's ` | `
-  // separators become line breaks.
+  // The status line's parts, one row each, then a section per meter that has something to show.
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Text } = $.ui.resolve(e)
-    const lines = await read($, statusLines)
-    const rows = lines.flatMap(line => line.split(SEPARATOR)).filter(row => row.trim())
+    // The body less the Box's own padding on each side.
+    const columns = Math.max(1, e.props.bodyColumns - 2)
+    // Under the status line, in this order: the context window, the tokens, the subscription.
+    const [lines, ...drawn] = await Promise.all([
+      read($, statusLines),
+      contextSection($, thresholds),
+      tokenSection($),
+      usageSection($, columns),
+    ])
+    const rows = panelRows(lines)
+    const sections = drawn.filter((section): section is Section => section !== null)
+
+    const drawRow = (spans: Span[]) => (
+      <Text wrap="truncate-end">
+        {spans.map(({ text, ...style }) => (
+          <Text {...style}>{text}</Text>
+        ))}
+      </Text>
+    )
 
     return (
       <Box flexDirection="column" paddingX={1}>
         {rows.length === 0 && <Text color={theme.muted}>Waiting for the status line…</Text>}
-        {rows.map(row => (
-          <Text wrap="truncate-end">
-            {parseAnsi(row.trim()).map(({ text, ...style }) => (
-              <Text {...style}>{text}</Text>
-            ))}
-          </Text>
+        {rows.map(row => drawRow(parseAnsi(row)))}
+        {sections.map(section => (
+          <Box flexDirection="column" marginTop={1}>
+            <Text color={theme.muted}>{section.heading}</Text>
+            {section.rows.map(drawRow)}
+          </Box>
         ))}
       </Box>
     )
