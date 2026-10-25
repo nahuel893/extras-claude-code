@@ -1,4 +1,4 @@
-// The fence rule is the opentheme mod's (`opentheme/hooks/commands.tsx`), copied rather than shared:
+// The fence rule is the openskin mod's (`plugins/openskin/hooks/commands.tsx`), copied rather than shared:
 // each mod installs on its own, and the two must agree on what a command is, so a block framed as a
 // command there is the block numbered here.
 

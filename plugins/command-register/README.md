@@ -43,7 +43,7 @@ Copy a command: press its digit, 0 closes
 
 ## What counts as a command
 
-The rule is the same one the opentheme mod uses to frame commands:
+The rule is the same one the openskin mod uses to frame commands:
 
 - a closed fenced block tagged with a shell language: `bash`, `sh`, `zsh`, `shell`, `console`,
   `fish`, `terminal` or `shellsession`;
