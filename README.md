@@ -75,6 +75,17 @@ Each mod's README lists its options and limits.
 /plugin marketplace add midudev/better-claude
 ```
 
+### A natural voice for the narrator on Arch Linux
+
+better-claude's **narrator** mod reads a summary of each turn out loud. On Linux it speaks through speech-dispatcher when it is installed, else espeak-ng, whose voice is robotic. [`scripts/narrator-piper-arch.sh`](scripts/narrator-piper-arch.sh) sets up [Piper](https://github.com/rhasspy/piper), a local neural voice, behind speech-dispatcher, so the narrator uses it with no change to the mod:
+
+```bash
+scripts/narrator-piper-arch.sh          # Argentine Spanish voice (es-ar)
+scripts/narrator-piper-arch.sh en-us    # any piper-voices-<locale> package in the AUR
+```
+
+It needs the narrator installed from better-claude, and yay or paru. It installs speech-dispatcher, `piper-tts-bin` and the voice package from the AUR, then says a test sentence. Run `/reload-plugins` afterwards. When `piper-tts-bin`'s PKGBUILD carries a stale checksum for its wrapper script, the script checks the Piper binary against the PKGBUILD itself and asks before building with the checksums skipped.
+
 ## Development
 
 Each mod lives in `plugins/<mod>/` with its own tests:
