@@ -75,6 +75,21 @@ With `opencodeStyle` off and `commandFrames` on, Claude Code keeps its own trans
 
 A setting that something else controls, such as a theme fixed by managed settings, is left as it is, and `/skin` names it in its reply.
 
+![/skin listing the presets](../../assets/features/skin.jpg)
+
+### Gallery
+
+Each preset in a real session, with the terminal background and `panelBackground` set as the table below says.
+
+| | |
+| --- | --- |
+| `default`<br>![default preset](../../assets/themes/default.jpg) | `tokyonight`<br>![tokyonight preset](../../assets/themes/tokyonight.jpg) |
+| `catppuccin-mocha`<br>![catppuccin-mocha preset](../../assets/themes/catppuccin-mocha.jpg) | `catppuccin-latte`<br>![catppuccin-latte preset](../../assets/themes/catppuccin-latte.jpg) |
+| `gruvbox-dark`<br>![gruvbox-dark preset](../../assets/themes/gruvbox-dark.jpg) | `nord`<br>![nord preset](../../assets/themes/nord.jpg) |
+| `rose-pine`<br>![rose-pine preset](../../assets/themes/rose-pine.jpg) | `rose-pine-dawn`<br>![rose-pine-dawn preset](../../assets/themes/rose-pine-dawn.jpg) |
+| `kanagawa-wave`<br>![kanagawa-wave preset](../../assets/themes/kanagawa-wave.jpg) | `everforest`<br>![everforest preset](../../assets/themes/everforest.jpg) |
+| `one-dark`<br>![one-dark preset](../../assets/themes/one-dark.jpg) | |
+
 ### Match your terminal background
 
 openskin draws on top of your terminal's own background, and a mod cannot change that color. After `/skin <name>`, set your terminal's background to the preset's base color, or the reply bands, blocks and panel sit on a color that does not belong to the theme. Set `panelBackground` to the same color so the status panel matches too.
@@ -100,6 +115,8 @@ Edits made outside Claude Code, such as a desktop theme script rewriting `~/.cla
 ## Status panel
 
 In the fullscreen layout the panel opens by itself beside the transcript (`/panel` opens it anywhere). Every part of it is a card: a rounded border in the `toolBar` color with the card's title drawn in its top edge, the cards stacked with no blank row between them, labels in the `muted` color and values bold.
+
+![/panel opening the status panel in a window under 144 columns](../../assets/features/panel.jpg)
 
 - **✿ Status**: always first. The project's directory (your home written as `~`); inside a git work tree, `Branch` and, while there are uncommitted changes, `Changes`: how many files are changed or untracked, then the lines added (green) and deleted (the `error` color) in tracked files since the last commit (untracked files count as files, their lines are not counted). Under them, the rows of `~/.claude/statusline.sh`, each ` | ` separated part on its own row, leaving out the `5h:` and `7d:` parts and the context bar, which the ◷ Usage and ◔ Context cards replace. Git runs again when Claude Code gives the status line new input (after a turn, or in another directory) and otherwise every 15 seconds, so edits made outside the session show up too.
 

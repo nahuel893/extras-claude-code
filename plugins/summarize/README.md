@@ -6,6 +6,8 @@ back to, instead of scrolling up to find an old reply.
 
 Nothing runs on its own. You type `/summ` when you want the summary written or brought up to date.
 
+![A session summary in openskin's status panel](../../assets/features/summary.jpg)
+
 ## Install
 
 At the prompt of a Claude Code terminal session:
