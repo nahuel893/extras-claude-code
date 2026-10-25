@@ -75,6 +75,26 @@ With `opencodeStyle` off and `commandFrames` on, Claude Code keeps its own trans
 
 A setting that something else controls, such as a theme fixed by managed settings, is left as it is, and `/skin` names it in its reply.
 
+### Match your terminal background
+
+openskin draws on top of your terminal's own background, and a mod cannot change that color. After `/skin <name>`, set your terminal's background to the preset's base color, or the reply bands, blocks and panel sit on a color that does not belong to the theme. Set `panelBackground` to the same color so the status panel matches too.
+
+| Preset | Terminal background |
+| --- | --- |
+| `default` | `#000000` or any near-black |
+| `tokyonight` | `#1a1b26` |
+| `catppuccin-mocha` | `#1e1e2e` |
+| `catppuccin-latte` | `#eff1f5` |
+| `gruvbox-dark` | `#282828` |
+| `nord` | `#2e3440` |
+| `rose-pine` | `#191724` |
+| `rose-pine-dawn` | `#faf4ed` |
+| `kanagawa-wave` | `#1f1f28` |
+| `everforest` | `#2d353b` |
+| `one-dark` | `#282c34` |
+
+Most terminals ship these themes, so picking the same theme there is usually enough. In kitty, for example, `kitty +kitten themes` applies one, or `background #1a1b26` in `kitty.conf` sets the color by hand. A desktop theme script can switch the terminal, `panelBackground` and the openskin colors in one step; see the paragraph below.
+
 Edits made outside Claude Code, such as a desktop theme script rewriting `~/.claude/settings.json`, reach open sessions by themselves within a few seconds. A session that has stopped following the file (one started before the file was replaced, say by a symlink into a dotfiles repository) gets a `/reload-plugins` from openskin when its colors or theme fall behind. `/skin` writes nothing while the session is behind the file, so it never undoes such an edit: it reloads first and asks you to run it again.
 
 ## Status panel

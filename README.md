@@ -4,7 +4,7 @@
 
 **A refined terminal UI for [Claude Code](https://claude.com/claude-code)**: themes, a redesigned transcript, a live status panel and session tools. Each mod installs on its own.
 
-- **Themes**: ten color presets (Tokyo Night, Catppuccin, Gruvbox, Nord, Rose Pine, Kanagawa, Everforest, One Dark and more), and every color is an option.
+- **Themes**: ten color presets (Tokyo Night, Catppuccin, Gruvbox, Nord, Rose Pine, Kanagawa, Everforest, One Dark and more), and every color is an option. Match your terminal's background to the theme ([how](plugins/openskin/README.md#match-your-terminal-background)).
 - **Redesigned interface**: an OpenCode-style transcript with barred prompts and tool calls, a band for each reply and framed shell commands.
 - **Status panel**: a sidebar dashboard with git status, context window, tokens, usage limits, and the session's board and summary.
 - **Keyboard-first**: copy any shell command Claude gave with one digit.
