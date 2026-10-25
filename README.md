@@ -27,13 +27,13 @@ Mods for [Claude Code](https://claude.com/claude-code) that make its terminal in
 
 ### [board](plugins/board): what is done, pending and waiting on you
 
-- **`/board`** asks a model (Haiku by default) to rewrite the project's board from the conversation: done `✓`, pending `○`, and waiting on your decision `◇`.
-- One board per project, kept in a file, and shown in the openskin panel.
+- **`/board`** asks a model (Haiku by default) to rewrite the session's board from the conversation: done `✓`, pending `○`, and waiting on your decision `◇`.
+- One board per session, kept in a file under the project (`~/.cache/extras-claude-code/projects/<project slug>/<session id>/board.md`), and shown in the openskin panel.
 
 ### [summarize](plugins/summarize): the session in a few lines
 
 - **`/summ`** asks a model (Haiku by default) for a short summary of the session: the goal, what happened, the decisions, and where it stands.
-- One summary per session, kept in a file, and shown in the openskin panel.
+- One summary per session, kept next to its board (`.../<session id>/summary.md`), and shown in the openskin panel.
 
 Each mod installs on its own and works without the others. board and summarize only add cards to the panel when openskin is there.
 

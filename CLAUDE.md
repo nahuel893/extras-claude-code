@@ -18,10 +18,12 @@ Claude Code mods (function-hooks plugins) published as one marketplace. Public r
   - `/skin`, which offers 11 theme presets and writes the colors through `$.config.set`.
   - `panelBackground`, which paints inside the engine's grey pane frame.
 - **command-register**: `/cc` lists the shell commands Claude gave, and a digit copies one; `/cc <n>` copies command n.
-- **board**: `/board` asks a model (Haiku by default, configurable) to rewrite a done `✓` / pending `○` / waiting `◇` list per project into `~/.cache/extras-claude-code/board/<cwd slug>.md`.
-- **summarize**: `/summ` asks a model (Haiku by default, configurable) for a session summary in `~/.cache/extras-claude-code/summaries/<session id>.md`.
+- **board**: `/board` asks a model (Haiku by default, configurable) to rewrite this session's done `✓` / pending `○` / waiting `◇` list into `~/.cache/extras-claude-code/projects/<cwd slug>/<session id>/board.md`. A new session starts from an empty board.
+- **summarize**: `/summ` asks a model (Haiku by default, configurable) for a session summary in `~/.cache/extras-claude-code/projects/<cwd slug>/<session id>/summary.md`.
 
-board and summarize are independent of openskin. The panel only reads their files and redraws when they change.
+The cwd slug is the working directory with every `/` replaced by `-`. Each mod computes these paths itself; they share no code. The old `board/<slug>.md` and `summaries/<session id>.md` files are not read, moved or deleted.
+
+board and summarize are independent of openskin. The panel only reads the current session's files and redraws when they change.
 
 ## The status line contract (openskin panel)
 
@@ -40,7 +42,7 @@ The panel reuses the user's status line script, which lives outside this repo:
   - `claude plugin test plugins/<mod>`
   - `tsc -p plugins/<mod>`, once the engine has laid the types in `.claude-plugin/types/` (gitignored).
 - Test-first for behavior changes. Observe RED, then GREEN. Regression tests sit next to the code they guard.
-- Last known test counts: openskin 86, command-register 17, board 9, summarize 8.
+- Last known test counts: openskin 98, command-register 17, board 10, summarize 9.
 - Artifacts (code, comments, docs, commit messages) are in English.
 
 ## Commits and publishing
