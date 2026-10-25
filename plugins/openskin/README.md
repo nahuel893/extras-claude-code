@@ -74,7 +74,7 @@ With `opencodeStyle` off and `commandFrames` on, Claude Code keeps its own trans
 
 A setting that something else controls, such as a theme fixed by managed settings, is left as it is, and `/skin` names it in its reply.
 
-Edits made outside Claude Code, such as a desktop theme script rewriting `~/.claude/settings.json`, reach open sessions by themselves within a few seconds. A session that has stopped following the file (one started before the file was replaced, say by a symlink into a dotfiles repository) gets a `/reload-plugins` from openskin when its colors or theme fall behind.
+Edits made outside Claude Code, such as a desktop theme script rewriting `~/.claude/settings.json`, reach open sessions by themselves within a few seconds. A session that has stopped following the file (one started before the file was replaced, say by a symlink into a dotfiles repository) gets a `/reload-plugins` from openskin when its colors or theme fall behind. `/skin` writes nothing while the session is behind the file, so it never undoes such an edit: it reloads first and asks you to run it again.
 
 ## Status panel
 

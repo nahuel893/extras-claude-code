@@ -1,5 +1,5 @@
 import type { EngineInterface, On, PluginOptions } from 'claude-code'
-import { startFollowing } from './follow'
+import { catchUp, startFollowing } from './follow'
 import { THEME_DEFAULTS, type Theme, UNSKINNED } from './theme'
 
 /**
@@ -53,6 +53,10 @@ async function applyPreset($: EngineInterface, name: string, preset: Preset) {
  * the start of an interactive session; the matcher keeps this `session.start` apart from the
  * status panel's, as a module may hook an event only once without one. The same start begins
  * following the settings file (`./follow`), whether the status panel is on or not.
+ *
+ * Claude Code writes its settings back whole from what the session holds, so before `/skin`
+ * changes any it makes sure the session is not behind the file: if it is, nothing is written,
+ * the settings are reloaded, and the person runs `/skin` again.
  */
 export const registerSkin = (on: On, options: PluginOptions) => {
   // While /skin writes, the follower waits: those writes reload the mod by themselves.
@@ -71,6 +75,12 @@ export const registerSkin = (on: On, options: PluginOptions) => {
 
     const preset = PRESETS[name]
     if (!preset) return { text: `No preset named "${name}". Presets:\n${presetList()}` }
+
+    if (await catchUp($, options).catch(() => false)) {
+      return {
+        text: `Settings changed outside this session, so nothing was written: reloading them first. Run /skin ${name} again once the reload is done.`,
+      }
+    }
 
     isApplying = true
     try {

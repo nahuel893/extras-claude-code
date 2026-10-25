@@ -110,6 +110,18 @@ export async function reloadOnce($: EngineInterface, drift: Drift): Promise<bool
 }
 
 /**
+ * Whether the session holds openskin's options or theme behind the settings file, after asking for
+ * a reload when it does. `false` too once that difference was reloaded and stayed (another settings
+ * layer wins), so a caller can go on.
+ */
+export async function catchUp($: EngineInterface, registered: PluginOptions): Promise<boolean> {
+  const path = await settingsPath($)
+  if (!path) return false
+  const drift = await readDrift($, path, registered)
+  return drift !== null && (await reloadOnce($, drift))
+}
+
+/**
  * Starts the timer that follows the settings file. `isPaused` holds it while openskin itself
  * changes settings (`/skin`), whose writes reload the mod anyway.
  */

@@ -12,6 +12,10 @@ const TICK = 1500
 const OPTIONS = { statusPanel: false } as const
 const REGISTERED = { ...THEME_DEFAULTS, statusPanel: false }
 
+/** `/skin <args>` as the person types it at the prompt, the way the engine raises it. */
+const typed = (args: string) =>
+  ({ command: 'skin', args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 100 } }) as const
+
 /** A settings file holding openskin's options under its installed id, and Claude Code's theme. */
 const settings = (options: Record<string, unknown>, theme = 'dark') =>
   JSON.stringify({ theme, pluginConfigs: { 'openskin@extras-claude-code': { options } }, permissions: { allow: [] } }, null, 2)
@@ -155,4 +159,48 @@ test('CLAUDE_CONFIG_DIR names where the settings file is', { options: OPTIONS },
   // One tick waits for Claude Code's own reload, the next asks for one.
   await w.clock.advance(TICK * 2 + 1)
   expect(w.reloads).toEqual(['reload-plugins'])
+})
+
+test('/skin right after an outside edit writes nothing, so the newer panel background stays, and reloads first', { options: OPTIONS }, async ($, on) => {
+  const w = world(on)
+  w.write(SETTINGS, settings({ ...THEME_DEFAULTS }))
+  await startSession($)
+  await w.clock.advance(TICK * 2)
+
+  w.write(SETTINGS, settings({ ...THEME_DEFAULTS, panelBackground: '#1a1b26' }))
+  const { text } = await $.command.run(typed('nord'))
+  await w.clock.advance(1)
+
+  expect(w.sets).toEqual({})
+  expect(w.reloads).toEqual(['reload-plugins'])
+  expect(text).toMatch(/\/skin nord/)
+})
+
+test('/skin with settings in step sets the preset, never the panel background', { options: { ...OPTIONS, panelBackground: '#1a1b26' } }, async ($, on) => {
+  const w = world(on)
+  w.write(SETTINGS, settings({ ...THEME_DEFAULTS, panelBackground: '#1a1b26' }))
+  await startSession($)
+  await w.clock.advance(TICK * 2)
+
+  await $.command.run(typed('nord'))
+
+  expect(w.reloads).toEqual([])
+  expect(Object.keys(w.sets)).not.toContain('openskin.panelBackground')
+  expect(w.sets['openskin.accent']).toBe('#88c0d0')
+})
+
+test('/skin goes ahead when the drift was already reloaded and stays (another settings layer wins)', { options: OPTIONS }, async ($, on) => {
+  const w = world(on)
+  w.write(SETTINGS, settings({ ...THEME_DEFAULTS }))
+  await startSession($)
+  await w.clock.advance(TICK * 2)
+
+  w.write(SETTINGS, settings({ ...THEME_DEFAULTS, panelBackground: '#1a1b26' }))
+  // One tick waits for Claude Code's own reload, the next asks for one.
+  await w.clock.advance(TICK * 2 + 1)
+  expect(w.reloads).toEqual(['reload-plugins'])
+
+  await $.command.run(typed('nord'))
+  expect(w.reloads).toEqual(['reload-plugins'])
+  expect(w.sets['openskin.accent']).toBe('#88c0d0')
 })
