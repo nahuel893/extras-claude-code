@@ -24,20 +24,27 @@ background, so you can keep typing:
 1. The mod reads this session's conversation: your messages and Claude's replies, text only, up to
    the last 60,000 characters or so.
 2. It asks a model for a narrative summary of it, written in the language you talk to Claude in.
-3. It writes the summary to the session's file, replacing the previous one.
+3. It writes the summary to the session's file under its project, replacing the previous one.
 
 A toast says `Summary updated` when it is done, or why it was not (the model call failed, or its
 reply was empty). A failed run leaves the previous summary as it was.
 
 ## Where the summary lives
 
-One file per session, named after the session id:
+One file per session, in a folder per project. The project's folder is the session's working
+directory with every `/` turned into `-`, and the session's folder is its id:
 
 ```
-~/.cache/extras-claude-code/summaries/<session id>.md
+~/.cache/extras-claude-code/projects/<slug>/<session id>/summary.md
 ```
 
-The [openskin](../openskin) mod shows it in its status panel.
+For a session `abc-123` in `/home/user/projects/app` that is
+`~/.cache/extras-claude-code/projects/-home-user-projects-app/abc-123/summary.md`. The
+[board](../board) mod writes its `board.md` in the same session folder, and the
+[openskin](../openskin) mod shows both in its status panel.
+
+Version 0.1.0 wrote `~/.cache/extras-claude-code/summaries/<session id>.md`. Those files are no
+longer read, moved or deleted.
 
 ## Options
 
