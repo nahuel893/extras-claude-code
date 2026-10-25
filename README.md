@@ -2,7 +2,14 @@
 
 # refined-claude-code
 
-Mods for [Claude Code](https://claude.com/claude-code) that make its terminal interface nicer to live in. Each one installs on its own.
+**A refined terminal UI for [Claude Code](https://claude.com/claude-code)**: themes, a redesigned transcript, a live status panel and session tools. Each mod installs on its own.
+
+- **Themes**: ten color presets (Tokyo Night, Catppuccin, Gruvbox, Nord, Rose Pine, Kanagawa, Everforest, One Dark and more), and every color is an option.
+- **Redesigned interface**: an OpenCode-style transcript with barred prompts and tool calls, a band for each reply and framed shell commands.
+- **Status panel**: a sidebar dashboard with git status, context window, tokens, usage limits, and the session's board and summary.
+- **Keyboard-first**: copy any shell command Claude gave with one digit.
+
+<sub>Keywords: Claude Code theme, Claude Code UI, Claude Code plugins, Claude Code mods, TUI customization, terminal theme, status panel, sidebar, dashboard, color schemes, dark theme, OpenCode look.</sub>
 
 ![openskin's status panel docked beside a session](assets/screenshot.jpeg)
 
