@@ -9,6 +9,7 @@ An OpenCode-style look for the Claude Code terminal transcript, as a Claude Code
 - Each turn closes with a footer: `▣ Claude · <model> · <duration>`.
 
 - In fullscreen, a status panel of cards docks beside the transcript: the project's directory, git branch and uncommitted changes with your status line script's output, one row per part; how full the context window is; each turn's tokens; your subscription's 5-hour and weekly windows; then the project's board and the session summary.
+- `/skin` switches every color at once between ten presets (Tokyo Night, Catppuccin, Gruvbox, Nord, Rose Pine, Kanagawa, Everforest, One Dark and more), and Claude Code's own theme with them.
 
 Every color is an option, and each part (the OpenCode look, the command frames, the status panel) can be switched off on its own.
 
