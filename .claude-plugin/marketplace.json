@@ -22,8 +22,8 @@
     {
       "name": "board",
       "source": "./plugins/board",
-      "description": "A living board per session: /board rewrites the list of what is done, pending and waiting on your decision from the conversation.",
-      "version": "0.2.0",
+      "description": "A living board per session: Claude keeps the list of what is done, pending and waiting on your decision with a board tool, and /board rewrites it from the conversation.",
+      "version": "0.3.0",
       "category": "productivity"
     },
     {
