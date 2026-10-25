@@ -1,5 +1,6 @@
 import type { Elements, On, RenderChildren } from 'claude-code'
 import { drawCommand, ENGINE_GUTTER, type Segment } from './commands'
+import type { Tracker } from './scrollbar'
 import { paint, type Theme } from './theme'
 
 /** The origins of a user row that are the person's own prompt: typed, sent from a phone, or a host app's. */
@@ -118,10 +119,11 @@ export const drawSummary = ({ Box }: Pick<Ui, 'Box'>, drawn: RenderChildren) => 
  * The OpenCode look for every row but Claude's replies, which `register` draws itself
  * because one hook has to own them (see there).
  */
-export const registerOpencode = (on: On, theme: Theme) => {
+export const registerOpencode = (on: On, theme: Theme, tracker: Tracker) => {
   // The person's prompt is drawn whole in every view, so an expanded row loses nothing.
   // Notifications and other parties' messages keep the engine's drawing.
   on('ui.render', { component: 'UserMessage' }, async ($, e, next) => {
+    tracker.see(e)
     if (!OWN_PROMPT_ORIGINS.has(e.props.origin.kind) || !e.props.text.trim()) return next(e)
 
     const ui = $.ui.resolve(e)
@@ -131,21 +133,24 @@ export const registerOpencode = (on: On, theme: Theme) => {
 
   // A standalone call is two adjacent rows, the call and its result: air above the
   // first and below the second makes them read as one block.
-  on('ui.render', { component: 'ToolUse' }, async ($, e, next) =>
-    drawBlock($.ui.resolve(e), theme, theme.toolBar, { above: 1, top: 1, bottom: 0 }, await next(e)),
-  )
+  on('ui.render', { component: 'ToolUse' }, async ($, e, next) => {
+    tracker.see(e)
+    return drawBlock($.ui.resolve(e), theme, theme.toolBar, { above: 1, top: 1, bottom: 0 }, await next(e))
+  })
 
   on('ui.render', { component: 'ToolResult' }, async ($, e, next) =>
     drawBlock($.ui.resolve(e), theme, theme.toolBar, { above: 0, top: 0, bottom: 1 }, await next(e)),
   )
 
   // An unfolded group draws each call as a ToolUse row, which gets its own block.
-  on('ui.render', { component: 'ToolGroup' }, async ($, e, next) =>
-    e.props.isExpanded ? next(e) : drawBlock($.ui.resolve(e), theme, theme.toolBar, ROOMY, await next(e)),
-  )
+  on('ui.render', { component: 'ToolGroup' }, async ($, e, next) => {
+    tracker.see(e)
+    return e.props.isExpanded ? next(e) : drawBlock($.ui.resolve(e), theme, theme.toolBar, ROOMY, await next(e))
+  })
 
   // The transcript's system error line: a slash command that threw.
   on('ui.render', { component: 'CommandOutput' }, async ($, e, next) => {
+    tracker.see(e)
     if (!e.props.isErrored) return next(e)
 
     const ui = $.ui.resolve(e)

@@ -1,6 +1,7 @@
 import type { Register } from 'claude-code'
 import { drawFramedCommands, SHELL_FENCE_RULE, splitCommands, type Segment } from './commands'
 import { drawReply, drawSummary, registerOpencode } from './opencode'
+import { createTracker, TRACKED, trackRows } from './scrollbar'
 import { registerSkin } from './skin'
 import { registerStatusPanel } from './statusline'
 import { readSwitches, readTheme } from './theme'
@@ -24,10 +25,20 @@ export const register: Register = (on, options) => {
     })
   }
 
-  if (opencodeStyle) registerOpencode(on, theme)
+  // Where the transcript's viewport is, for the panel's scrollbar. The rows openskin draws note it in
+  // their own hooks (a component takes one hook, so a second mod could sit above and never run);
+  // the others get a hook that only notes it.
+  const tracker = createTracker()
+  const isOwned = (component: string) =>
+    component === 'AssistantMessage' ? opencodeStyle || commandFrames : opencodeStyle && component !== 'ToolResult'
+  if (options.statusPanel !== false) {
+    trackRows(on, tracker, TRACKED.filter(isOwned))
+  }
+
+  if (opencodeStyle) registerOpencode(on, theme, tracker)
 
   // The status band above the prompt has its own switch, on unless explicitly false.
-  if (options.statusPanel !== false) registerStatusPanel(on, theme, options)
+  if (options.statusPanel !== false) registerStatusPanel(on, theme, options, tracker)
 
   // /skin switches every color at once, whichever parts are on; the same module follows
   // outside edits of the settings file, so an open session takes them without /reload-plugins.
@@ -39,6 +50,7 @@ export const register: Register = (on, options) => {
   // The reply and its command frames live in one hook: two mods redrawing the same
   // message have no fixed order, so a separate frame mod could sit beneath and never run.
   on('ui.render', { component: 'AssistantMessage' }, async ($, e, next) => {
+    tracker.see(e)
     const ui = $.ui.resolve(e)
 
     if (opencodeStyle) {

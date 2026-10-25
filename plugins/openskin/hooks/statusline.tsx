@@ -5,6 +5,7 @@ import { countTurn, startTokenMeter, tokenSection } from './meters/tokens'
 import { measureUsage, startUsageMeter, stopUsageMeter, usageSection } from './meters/usage'
 import { boardSection, startNotes, summarySection } from './notes'
 import { GIT_EVERY, inputDir, projectStatus, shortHome, startProject } from './project'
+import { drawScrollbar, type Tracker } from './scrollbar'
 import { paint, type Theme } from './theme'
 import type { StatusLines } from '../types'
 
@@ -18,6 +19,7 @@ import type { StatusLines } from '../types'
  * Under the status line the panel draws the meters of `./meters/` (context fill, tokens,
  * subscription usage), whose hooks are registered here: a module takes one hook per event.
  * Last come the board and the session summary of `./notes`, polled on the same timer.
+ * Down the panel's left edge runs a scrollbar for the transcript (`./scrollbar`): click a cell to jump there.
  *
  * Each part is a card: a round border with its title drawn over the top edge. The first card,
  * Status, is the mod's own: the project's directory, branch and uncommitted changes from
@@ -27,10 +29,13 @@ const SESSIONS = '.cache/openskin/sessions'
 const DOCKED = '.cache/openskin/docked'
 const SCRIPT = '.claude/statusline.sh'
 const REFRESH_MS = 1500
+const SCROLLBAR_MS = 250
 const PANE = 'openskin-status'
 const SEPARATOR = / \| /
 
 const statusLines = atom({ plugin: 'openskin', key: 'statusLines' } as const, [])
+// Counts the changes of the transcript scrollbar's tracker: a render hook cannot write state, so a timer does.
+const scrollbarTick = atom({ plugin: 'openskin', key: 'scrollbarTick' } as const, 0)
 
 /** A run of text in one style, as the ANSI codes before it left the style. */
 export type Span = {
@@ -146,6 +151,9 @@ const BLOCK_CHROME = 2 + 1 + 2 + 2 + 2
 /** Columns a card of the panel adds around its rows: the border and the padding on each side. */
 const CARD_CHROME = 2 + 2
 
+/** The scrollbar's column at the panel's left edge. */
+const BAR_WIDTH = 1
+
 /**
  * Columns a status line takes on screen: its text without escape codes, an emoji
  * counted as two columns, joiners and variation selectors as none.
@@ -183,7 +191,7 @@ export const panelRows = (lines: StatusLines): string[] =>
     .map(row => row.trim())
     .filter(row => row && !REPLACED_PART.test(plain(row).trim()))
 
-export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions) => {
+export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions, tracker: Tracker) => {
   const thresholds = readThresholds(options)
   // This session's mark in DOCKED, known once session.start has read the home and session id.
   let dockedMark = ''
@@ -250,6 +258,13 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
       // Edits made outside the session change no input: git is read anyway every GIT_EVERY ticks.
       if (++ticks % GIT_EVERY === 0) void pollProject()
     })
+    // The scrollbar follows the transcript's viewport: draw it again whenever the tracker moved.
+    let seenVersion = tracker.version
+    $.clock.every(SCROLLBAR_MS, () => {
+      if (tracker.version === seenVersion) return
+      seenVersion = tracker.version
+      void update($, scrollbarTick, n => n + 1)
+    })
 
     await $.command.register({ name: 'panel', description: 'Open the status panel beside the transcript' })
 
@@ -302,14 +317,15 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
   // The Status card (the project, then the status line's parts, one row each), then a card per
   // section that has something to show, stacked with no blank row between them.
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
-    const { Box, Text } = $.ui.resolve(e)
+    const { Box, Button, Text } = $.ui.resolve(e)
     // The body less each card's border and padding on both sides.
-    const columns = Math.max(1, e.props.bodyColumns - CARD_CHROME)
+    const columns = Math.max(1, e.props.bodyColumns - CARD_CHROME - BAR_WIDTH)
     // After the Status card, in this order: the context window, the tokens, the subscription,
     // the board, the session summary.
-    const [lines, project, ...drawn] = await Promise.all([
+    const [lines, project, , ...drawn] = await Promise.all([
       read($, statusLines),
       projectStatus($),
+      read($, scrollbarTick),
       contextSection($, thresholds, theme),
       tokenSection($),
       usageSection($, columns, theme),
@@ -372,10 +388,16 @@ export const registerStatusPanel = (on: On, theme: Theme, options: PluginOptions
     const background = paint(theme.panelBackground)
     const fill = background === undefined ? {} : { backgroundColor: background, minHeight: e.props.scroll.bodyRows }
 
+    // The transcript's scrollbar runs down the left edge, a cell per row of the pane's body, then the cards.
+    const bar = drawScrollbar({ Box, Button, Text }, $, tracker, Math.max(1, e.props.scroll.bodyRows), theme)
+
     return (
-      <Box flexDirection="column" {...fill}>
-        {card('✿ Status', status)}
-        {sections.map(section => card(section.heading, section.rows.map(row => drawRow(row, section.wrap))))}
+      <Box flexDirection="row" {...fill}>
+        {bar}
+        <Box flexDirection="column" flexGrow={1} flexShrink={1}>
+          {card('✿ Status', status)}
+          {sections.map(section => card(section.heading, section.rows.map(row => drawRow(row, section.wrap))))}
+        </Box>
       </Box>
     )
   })

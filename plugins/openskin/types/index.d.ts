@@ -41,6 +41,7 @@ declare module 'claude-code' {
       contextFill: Fill
       usageLimits: Limit[]
       usageTick: number
+      scrollbarTick: number
       board: BoardLines
       summary: string
       project: ProjectStatus | null
