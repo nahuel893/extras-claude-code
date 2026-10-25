@@ -1,11 +1,22 @@
 {
-  "name": "openskin",
-  "owner": { "name": "nahuel893" },
+  "name": "extras-claude-code",
+  "owner": { "name": "nahuel893", "url": "https://github.com/nahuel893" },
+  "metadata": {
+    "description": "Claude Code mods by nahuel893: openskin, an OpenCode-style look for the transcript; command-register, copy the shell commands Claude gives from a numbered list."
+  },
   "plugins": [
     {
       "name": "openskin",
-      "source": "./",
+      "source": "./plugins/openskin",
       "description": "An OpenCode-style look for the Claude Code transcript, with framed shell commands; every color configurable.",
+      "version": "0.5.0",
+      "category": "productivity"
+    },
+    {
+      "name": "command-register",
+      "source": "./plugins/command-register",
+      "description": "A numbered register of the shell commands Claude gives: /cc lists them to copy one with its digit.",
+      "version": "0.1.0",
       "category": "productivity"
     }
   ]

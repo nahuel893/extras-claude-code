@@ -1,0 +1,7 @@
+{
+  "name": "command-register",
+  "version": "0.1.0",
+  "description": "A numbered register of every shell command Claude gives in the session: /cc lists them above the prompt to copy one with its digit, /cc <n> copies command n.",
+  "author": { "name": "nahuel893" },
+  "types": "./types/index.d.ts"
+}

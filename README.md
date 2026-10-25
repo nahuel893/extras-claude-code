@@ -1,62 +1,47 @@
-# openskin
+# extras-claude-code
 
-An OpenCode-style look for the Claude Code terminal transcript, as a Claude Code mod.
+Mods for [Claude Code](https://claude.com/claude-code) that make its terminal interface nicer to live in. Each one installs on its own.
 
-- Your prompts sit in a full-width block with an accent bar down the left edge.
-- Tool calls, their results and errors get blocks of their own, with a quieter bar.
-- Claude's replies are drawn without a bullet, on a background band of their own.
-- Shell commands in a reply are framed, so they stand apart from the prose.
-- Each turn closes with a footer: `▣ Claude · <model> · <duration>`.
+| Mod | What it does |
+| --- | --- |
+| [openskin](plugins/openskin) | An OpenCode-style look for the transcript: your prompts and tool calls in barred blocks, Claude's replies on a band of their own, framed shell commands and a `▣ Claude · model · time` footer. Every color is an option. |
+| [command-register](plugins/command-register) | Every shell command Claude gives goes into a numbered register. `/cc` lists them above the prompt and a digit copies one; `/cc <n>` copies command n. No more selecting commands with the mouse. |
 
-Every color is an option, and each of the two parts (the OpenCode look and the command frames) can be switched off on its own.
-
-Unofficial: not affiliated with OpenCode or Anthropic.
+Unofficial: not affiliated with Anthropic or OpenCode.
 
 ## Install
 
-At the prompt of a Claude Code terminal session:
+Add the marketplace once, at the prompt of a Claude Code terminal session:
 
 ```
-/plugin install openskin --marketplace nahuel893/openskin-claude-code
+/plugin marketplace add nahuel893/extras-claude-code
 ```
 
-Answer `y` to add the marketplace, then pick a scope (user scope loads it in every session).
+Then install the mods you want:
 
-From a shell:
-
-```bash
-claude plugin install openskin --marketplace nahuel893/openskin-claude-code
+```
+/plugin install openskin@extras-claude-code
+/plugin install command-register@extras-claude-code
 ```
 
-In the desktop app, where `/plugin` does not run: click + next to the prompt box, then Plugins, Add marketplace with `nahuel893/openskin-claude-code`, then Add plugin.
+From a shell, the same steps are `claude plugin marketplace add nahuel893/extras-claude-code` and `claude plugin install <mod>@extras-claude-code`.
 
-## Options
+Each mod's README lists its options and limits.
 
-Change them with `/plugin configure openskin@openskin`. A color is a hex such as `#f0a6ec`, a color name, or a Claude Code theme key such as `bashBorder`.
+## Recommended
 
-| Option | Default | What it does |
-| --- | --- | --- |
-| `opencodeStyle` | `true` | The OpenCode look: prompt, tool and error blocks, the reply band, the turn footer. |
-| `commandFrames` | `true` | Frames the shell commands in Claude's replies and asks Claude to tag them as shell blocks. |
-| `accent` | `#f0a6ec` | The bar beside your prompts and the square in the footer. |
-| `surface` | `#24242c` | The background of the prompt, tool and error blocks. |
-| `toolBar` | `#55555f` | The bar beside tool calls and their results. |
-| `error` | `#ff6b5b` | The bar beside error rows. |
-| `muted` | `#7f7f8a` | The footer's model and duration, and the text of error rows. |
-| `command` | `bashBorder` | The frame and label of shell commands. |
-| `background` | `#1c1c22` | The band behind Claude's replies; `none` draws no band. |
+[**better-claude**](https://github.com/midudev/better-claude) by [Miguel Ángel Durán (midudev)](https://github.com/midudev) is a great collection of Claude Code mods: a prompt queue, one-turn Haiku and max-effort prefixes, token, subscription and context meters, image previews, a git snapshot of every turn, and more. Install it alongside these:
 
-With `opencodeStyle` off and `commandFrames` on, Claude Code keeps its own transcript and only the commands are framed. With both off, the mod draws nothing.
-
-## Limits
-
-A mod can only restyle what Claude Code lets it draw. The prompt input box has no hook, so its look follows `/theme`. Rows the engine draws itself (the spinner, system notices) keep their own look.
+```
+/plugin marketplace add midudev/better-claude
+```
 
 ## Development
 
+Each mod lives in `plugins/<mod>/` with its own tests:
+
 ```bash
-claude plugin test .
-claude plugin validate .
+cd plugins/openskin && claude plugin test . && claude plugin validate .
 ```
 
 ## License
