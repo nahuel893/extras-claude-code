@@ -26,6 +26,7 @@ Allowed edit surfaces: `plugins/command-register/**`, `.claude-plugin/marketplac
 - [x] T2 The pane: `$.ui.open`, `Pane` render, band removal. Route: inline.
 - [x] T3 Navigation (`‹ ›` and hotkeys), digits, copy and close. Route: inline.
 - [x] T4 README, CLAUDE.md line and test count, version 0.3.0 (plugin.json, marketplace.json). The README says clicks need fullscreen (`"tui": "fullscreen"`), where the pane sits in fullscreen (docked beside the transcript, a tab next to openskin's panel) and that outside fullscreen it is inline and the keyboard works. Route: inline.
+- [x] T5 Keep the register in a per-session file (`~/.cache/refined-claude-code/projects/<cwd slug>/<session id>/commands.json`): write-through after an append that adds commands and after a /clear; restore at `session.start` into an empty register, with the turn counter at the highest stored turn. Live testing showed `$.state` is lost when Claude Code goes to the background. Route: inline (one mod). Evidence: RED 5 of 6 new tests failed (the sixth, no write without commands, passes trivially); GREEN 42 pass; `claude plugin validate` passed. Commits: 832a7f2 (behavior and tests), 5b3d975 (README, CLAUDE.md), 4e7c1d1 (version 0.4.0).
 
 ## Checks
 
