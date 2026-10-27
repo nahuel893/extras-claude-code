@@ -15,7 +15,7 @@
     {
       "name": "command-register",
       "source": "./plugins/command-register",
-      "description": "A numbered register of the shell commands Claude gives: /cc lists them to copy one with its digit.",
+      "description": "A register of the shell commands Claude gives: /cc opens a panel to browse them message by message and copy one.",
       "version": "0.2.0",
       "category": "productivity"
     },
