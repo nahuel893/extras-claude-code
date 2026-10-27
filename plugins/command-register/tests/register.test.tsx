@@ -71,7 +71,7 @@ test('a number that is not one answers a notice', async ($, on) => {
   await $.session.append(reply('r1', '```bash\nmake\n```'))
 
   expect(await cc('0')).toBe('There is no command #0: the latest message holds #1 to #1.')
-  expect(await cc('two')).toBe('Usage: /cc to pick from the list, or /cc <n> to copy command n.')
+  expect(await cc('two')).toBe('Usage: /cc to pick from the panel, or /cc <n> to copy command n of the latest message.')
   expect(copied).toEqual([])
 })
 

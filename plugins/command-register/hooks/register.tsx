@@ -2,7 +2,8 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, RenderSurface } from 'claude-code'
 import type { Command } from '../types'
 import { commandsIn } from './commands'
-import { firstLine, messagesOf, hintText, previewLines, previewRule, rowLabel, visible } from './dialog'
+import { firstLine, hintText, messagesOf, previewLines, previewRule, rowLabel, visible } from './dialog'
+import type { Message } from './dialog'
 
 /**
  * The register, oldest first. Each command carries the prompt counter of its turn (`turn`), which
@@ -14,43 +15,54 @@ const commands = atom({ plugin: 'command-register', key: 'commands' } as const, 
 /** How many prompts the person has sent: the turn a reply's commands belong to. */
 const turn = atom({ plugin: 'command-register', key: 'turn' } as const, 0)
 
-/** Whether `/cc` has the list open in the band above the prompt. */
-const isOpen = atom({ plugin: 'command-register', key: 'isOpen' } as const, false)
+/** The turn of the message the pane shows; null is the latest one. */
+const shown = atom({ plugin: 'command-register', key: 'shown' } as const, null)
 
-/** The key of the band element holding the focus ring, when the band holds the keyboard. */
+/** The key of the pane element holding the focus ring, when the pane holds the keyboard. */
 const focusKey = atom({ plugin: 'command-register', key: 'focusKey' } as const, null)
 
-/** What the person typed in the list's filter. */
+/** What the person typed in the pane's filter. */
 const filter = atom({ plugin: 'command-register', key: 'filter' } as const, '')
 
+const PANE = 'cc'
 const EMPTY = 'No shell commands yet: the register fills as Claude gives them.'
-const USAGE = 'Usage: /cc to pick from the list, or /cc <n> to copy command n.'
-const OPENED = "Command list open above the prompt: press a row's digit to copy it."
+const USAGE = 'Usage: /cc to pick from the panel, or /cc <n> to copy command n of the latest message.'
+const OPENED = 'Command panel open: a digit or Enter copies a command, Esc closes it.'
+
+// The pane's rows: the header, the filter, the preview rule, up to three preview lines and the hint
+// stand around the commands; the pane asks for that much more than the longest message.
+const CHROME_ROWS = 8
+const MIN_ROWS = 10
+const MAX_ROWS = 30
 
 /** Copies command `n` (1-based) of the latest message and answers the line saying so, or why not. */
-const copyNumber = async ($: EngineInterface, n: number, surface?: RenderSurface) => {
+const copyNumber = async ($: EngineInterface, n: number) => {
   const latest = messagesOf(await read($, commands)).at(-1)
   if (latest === undefined) return EMPTY
 
   const command = latest.commands[n - 1]
   if (!command) return `There is no command #${n}: the latest message holds #1 to #${latest.commands.length}.`
 
-  return copyCommand($, n, command.text, surface)
+  return copyCommand($, n, command.text)
 }
 
 /** Copies `text` as command `n` and answers the line saying so, or why not. */
 const copyCommand = async ($: EngineInterface, n: number, text: string, surface?: RenderSurface) => {
-  const command = { text }
-  const copied = await $.ui.copy({ text: command.text, ...(surface === undefined ? {} : { surface }) })
+  const copied = await $.ui.copy({ text, ...(surface === undefined ? {} : { surface }) })
 
-  return copied.isCopied
-    ? `Copied #${n}: ${firstLine(command.text)}`
-    : `Could not copy #${n} (${copied.reason}).`
+  return copied.isCopied ? `Copied #${n}: ${firstLine(text)}` : `Could not copy #${n} (${copied.reason}).`
 }
 
-/** Shuts the list and forgets the filter and the ring's place. */
-async function closeList($: EngineInterface) {
-  await update($, isOpen, () => false)
+/** The index of the message the pane shows: the one at `turn`, the latest when none or when it is gone. */
+const messageShown = (messages: readonly Message[], at: number | null) => {
+  const index = messages.findIndex(message => message.turn === at)
+
+  return index === -1 ? messages.length - 1 : index
+}
+
+/** Forgets what the last opening left: the message shown, the filter and the ring's place. */
+async function reset($: EngineInterface) {
+  await update($, shown, () => null)
   await update($, filter, () => '')
   await update($, focusKey, () => null)
 }
@@ -59,7 +71,7 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'cc',
-      description: 'Copy a shell command Claude gave: /cc lists them, /cc <n> copies command n',
+      description: 'Copy a shell command Claude gave: /cc opens the panel, /cc <n> copies command n of the latest message',
     })
 
     return next(e)
@@ -85,7 +97,7 @@ export const register: Register = on => {
     return next(e)
   }).catch(($, e, next) => next(e))
 
-  // A /clear ends the conversation the numbers point into; the next one starts at #1.
+  // A /clear ends the conversation the messages belong to; the next one starts over.
   on('session.end', async ($, e, next) => {
     if (e.reason === 'clear') {
       await update($, commands, () => [])
@@ -95,23 +107,39 @@ export const register: Register = on => {
     return next(e)
   })
 
-  // Every prompt or command the person sends shuts the list: the band has no word of Esc (it hands
-  // the keys back to the prompt and raises nothing), so going back to the prompt is the dismissal.
-  // `/cc` itself passes here first and opens the list again at `command.run`.
+  // Every prompt or command the person sends starts a new turn: what Claude answers to it is the
+  // next message.
   on('prompt.submit', async ($, e, next) => {
     await update($, turn, n => n + 1)
-    await closeList($)
 
     return next(e)
   }).catch(($, e, next) => next(e))
+
+  // However the pane closes (Esc, the close mark, a copy), the next opening starts clean.
+  on('ui.close', { id: PANE }, async ($, e, next) => {
+    await reset($)
+
+    return next(e)
+  })
 
   on('command.run', { command: 'cc' }, async ($, e) => {
     const args = e.args.trim()
 
     if (args === '') {
-      if (messagesOf(await read($, commands)).length === 0) return { text: EMPTY }
-      await closeList($)
-      await update($, isOpen, () => true)
+      const messages = messagesOf(await read($, commands))
+      if (messages.length === 0) return { text: EMPTY }
+
+      await reset($)
+      const longest = Math.max(...messages.map(message => message.commands.length))
+      await $.ui.open({
+        id: PANE,
+        title: 'Commands',
+        focus: true,
+        closeOnEscape: true,
+        holdToasts: true,
+        columns: 80,
+        rows: Math.min(MAX_ROWS, Math.max(MIN_ROWS, longest + CHROME_ROWS)),
+      })
 
       return { text: OPENED }
     }
@@ -120,102 +148,93 @@ export const register: Register = on => {
     return { text: await copyNumber($, Number(args)) }
   })
 
-  // The ring moves by the person's Tab, arrows or click once the band holds the keyboard: follow it
-  // so the marker and the preview track the focused row, and the hint knows the band has the keys.
-  on('ui.focus', { component: 'AbovePrompt' }, async ($, e, next) => {
+  // The ring moves by the person's Tab, arrows or click: follow it so the marker and the preview
+  // track the focused row.
+  on('ui.focus', { component: 'Pane' }, async ($, e, next) => {
     const moved = await next(e)
-    if (moved.deny === undefined) {
+    if (moved.deny === undefined && e.requestId === PANE) {
       await update($, focusKey, () => (e.plugin === 'command-register' && e.element !== undefined ? e.element : null))
     }
 
     return moved
   })
 
-  // The dialog, above whatever else the band holds: a rounded frame, the filter, up to nine rows
-  // (each a Button with its digit as hotkey: a bare digit in the empty prompt presses it with no
-  // focus step), the selected command whole, and a hint that depends on who holds the keyboard.
-  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
-    // A survey holds the band (its digits are the person's answer): the list waits for it.
-    if (e.props.hasSurvey || !(await read($, isOpen))) return next(e)
-
-    const list = await read($, commands)
-    if (list.length === 0) return next(e)
-
+  // The pane: the header, the filter, the shown message's commands (each a Button, its digit the
+  // hotkey), the focused command whole and a hint.
+  on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Button, Input, Text } = $.ui.resolve(e)
+    const messages = messagesOf(await read($, commands))
+    const inner = Math.max(20, e.props.bodyColumns)
+
+    if (messages.length === 0) return <Text dimColor>{EMPTY}</Text>
+
+    const at = messageShown(messages, await read($, shown))
+    const message = messages[at]!
     const text = await read($, filter)
     const focused = await read($, focusKey)
-    const matches = visible(list, text)
+    const matches = visible(message.commands, text)
 
-    const inner = Math.max(20, e.props.bodyColumns - 4)
-    // Frame (2), filter (1), preview rule (1) and hint (1) are fixed; the preview takes up to three
-    // lines in a tall band, one in a short one. A taller tree scrolls, and the engine arms no digit
+    // The preview takes up to three lines in a tall pane, one in a short one. The rows left over
+    // are the commands'; a longer message is narrowed by the filter, and the engine arms no digit
     // of a row scrolled out of view.
-    const previewRoom = matches.length === 0 ? 0 : e.props.maxRows >= 14 ? 3 : 1
-    const shown = Math.max(1, Math.min(9, matches.length, e.props.maxRows - 5 - previewRoom))
-    const rows = matches.slice(0, shown)
+    const previewRoom = matches.length === 0 ? 0 : e.props.scroll.bodyRows >= 14 ? 3 : 1
+    const room = Math.max(1, e.props.scroll.bodyRows - 5 - previewRoom)
+    const rows = matches.slice(0, room)
     const selected = rows.find(row => `command:${row.n}` === focused) ?? rows[0]
-    const isFocused = focused !== null
     const preview = selected === undefined ? [] : previewLines(selected.text, inner, previewRoom)
 
-    const pick = (n: number) => async (press: { surface: RenderSurface }) => {
-      const said = await copyCommand($, n, list[n - 1]?.text ?? '', press.surface)
-      await closeList($)
+    const pick = (n: number, command: string) => async (press: { surface: RenderSurface }) => {
+      const said = await copyCommand($, n, command, press.surface)
+      await $.ui.close({ id: PANE })
       $.ui.toast(said)
     }
 
     return (
       <Box flexDirection="column">
-        <Box flexDirection="column">
-          <Box borderStyle="round" borderColor="promptBorder" paddingX={1} flexDirection="column">
-            <Input
-              key="filter"
-              label="filter: "
-              placeholder="type to filter"
-              value={text}
-              submitLabel="copy"
-              onInput={value => update($, filter, () => value)}
-              onSubmit={async (value, press) => {
-                const first = visible(list, value)[0]
-                if (first === undefined) return
-                await pick(first.n)(press)
-              }}
-            />
-            {rows.length === 0 && <Text dimColor>{`No command matches "${text}"`}</Text>}
-            {rows.map(({ n, text: command }, i) => (
-              <Box key={`row:${n}`}>
-                <Text color="suggestion">{selected?.n === n ? '▶ ' : '  '}</Text>
-                <Button
-                  key={`command:${n}`}
-                  plain
-                  hotkey={String(i + 1)}
-                  label={rowLabel(command, inner - 7)}
-                  onPress={pick(n)}
-                />
-              </Box>
-            ))}
-            {selected !== undefined && (
-              <>
-                <Text dimColor>{previewRule(inner)}</Text>
-                <Box key="preview" flexDirection="column">
-                  {preview.map((line, i) => (
-                    <Text key={`line:${i}`}>{line}</Text>
-                  ))}
-                </Box>
-              </>
-            )}
-            <Box key="hint">
-              <Text dimColor>{hintText(isFocused, inner)}</Text>
-              <Button key="close" plain dimColor hotkey="0" label="close" onPress={() => closeList($)} />
-            </Box>
-          </Box>
-          <Box position="absolute" top={0} left={2}>
-            <Text bold color="suggestion">{' Commands '}</Text>
-          </Box>
-          <Box position="absolute" top={0} right={2}>
-            <Text dimColor>{` ${rows.length} of ${list.length} `}</Text>
-          </Box>
+        <Box key="head">
+          <Text bold color="suggestion">{'Commands  '}</Text>
+          <Text>{`message ${at + 1} of ${messages.length}`}</Text>
         </Box>
-        {await next(e)}
+        <Input
+          key="filter"
+          label="filter: "
+          placeholder="type to filter"
+          value={text}
+          submitLabel="copy"
+          onInput={value => update($, filter, () => value)}
+          onSubmit={async (value, press) => {
+            const first = visible(message.commands, value)[0]
+            if (first === undefined) return
+            await pick(first.n, first.text)(press)
+          }}
+        />
+        {rows.length === 0 && <Text dimColor>{`No command matches "${text}"`}</Text>}
+        {rows.map(({ n, text: command }, i) => (
+          <Box key={`row:${n}`}>
+            <Text color="suggestion">{selected?.n === n ? '▶ ' : '  '}</Text>
+            <Button
+              key={`command:${n}`}
+              plain
+              {...(i < 9 ? { hotkey: String(i + 1) } : {})}
+              label={rowLabel(i < 9 ? command : `${n}: ${command}`, inner - 5)}
+              onPress={pick(n, command)}
+            />
+          </Box>
+        ))}
+        {matches.length > rows.length && <Text dimColor>{`+${matches.length - rows.length} more: type to filter`}</Text>}
+        {selected !== undefined && (
+          <>
+            <Text dimColor>{previewRule(inner)}</Text>
+            <Box key="preview" flexDirection="column">
+              {preview.map((line, i) => (
+                <Text key={`line:${i}`}>{line}</Text>
+              ))}
+            </Box>
+          </>
+        )}
+        <Box key="hint">
+          <Text dimColor>{hintText(inner)}</Text>
+        </Box>
       </Box>
     )
   })

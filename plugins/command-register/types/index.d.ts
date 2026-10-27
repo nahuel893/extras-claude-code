@@ -3,6 +3,12 @@ export type Command = { turn: number; row: string; text: string }
 
 declare module 'claude-code' {
   interface PluginState {
-    'command-register': { commands: Shaped<Command[]>; turn: number; isOpen: boolean; focusKey: string | null; filter: string }
+    'command-register': {
+      commands: Shaped<Command[]>
+      turn: number
+      shown: number | null
+      focusKey: string | null
+      filter: string
+    }
   }
 }
