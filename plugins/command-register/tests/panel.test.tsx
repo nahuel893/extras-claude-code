@@ -163,3 +163,16 @@ test('a /cc while the pane is already open closes it and opens it again with the
   expect(opened).toHaveLength(2)
   expect(opened[1]).toMatchObject({ id: 'cc', focus: true })
 })
+
+test('the hint says plainly when the pane has no keyboard', async ($, on) => {
+  const { cc } = await engine($, on)
+  await messages($, ['ls'])
+  await cc()
+
+  const ui = await $.ui.mount(pane(30, 80, false))
+  expect((await ui.find({ key: 'hint' }))?.text).toContain('no keyboard: click a row')
+  await ui.unmount()
+  const focused = await $.ui.mount(pane())
+  expect((await focused.find({ key: 'hint' }))?.text).not.toContain('no keyboard')
+  await focused.unmount()
+})

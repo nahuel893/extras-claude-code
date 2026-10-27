@@ -264,7 +264,7 @@ export const register: Register = on => {
           </>
         )}
         <Box key="hint">
-          <Text dimColor>{hintText(inner)}</Text>
+          <Text dimColor>{hintText(inner, e.props.isFocused)}</Text>
         </Box>
       </Box>
     )

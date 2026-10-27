@@ -68,8 +68,9 @@ export const previewLines = (text: string, width: number, max: number) => {
 /** The preview's rule: `┄ preview ┄┄┄…` to `width` cells. */
 export const previewRule = (width: number) => `┄ preview ${'┄'.repeat(Math.max(0, width - 10))}`
 
-/** The hint's text, by how much room the pane's line has: the fewer the cells, the fewer the words. */
-export const hintText = (inner: number) => {
+/** The hint's text, by whether the pane holds the keyboard and how much room the pane's line has: the fewer the cells, the fewer the words. */
+export const hintText = (inner: number, isFocused = true) => {
+  if (!isFocused) return 'no keyboard: click a row'
   if (inner >= 58) return '↑↓ move · enter or 1-9 copy · h/l message · esc close'
   if (inner >= 40) return '1-9 copy · h/l message · esc close'
 
