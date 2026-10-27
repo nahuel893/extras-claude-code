@@ -150,3 +150,16 @@ test('the pane opens after the command has returned, not inside it: focus is ref
   expect(opened).toHaveLength(1)
   expect(opened[0]).toMatchObject({ id: 'cc', focus: true })
 })
+
+test('a /cc while the pane is already open closes it and opens it again with the keys', async ($, on) => {
+  const { cc, opened, closed } = await engine($, on)
+  await messages($, ['ls'])
+
+  await cc()
+  expect(closed).toEqual([])
+  await cc()
+
+  expect(closed).toEqual(['cc'])
+  expect(opened).toHaveLength(2)
+  expect(opened[1]).toMatchObject({ id: 'cc', focus: true })
+})

@@ -78,6 +78,10 @@ async function openPane($: EngineInterface) {
   const messages = messagesOf(await read($, commands))
   if (messages.length === 0) return
 
+  // Opening an id that is already open only retitles it and does not grant the keys: close it
+  // first (a pane opened without the keys never got an Esc to close it).
+  if ((await $.ui.panes()).some(pane => pane.id === PANE)) await $.ui.close({ id: PANE })
+
   const longest = Math.max(...messages.map(message => message.commands.length))
   await $.ui.open({
     id: PANE,

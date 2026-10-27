@@ -6,7 +6,7 @@ import type { On, PaneOpenArgs } from 'claude-code'
 const OPEN_DELAY_MS = 100
 
 /** The `/cc` pane as the surface hands it to the mod's `ui.render` hook (docked, with the keys). */
-export const pane = (bodyRows = 30, bodyColumns = 80) =>
+export const pane = (bodyRows = 30, bodyColumns = 80, isFocused = true) =>
   ({
     plugin: 'command-register',
     component: 'Pane',
@@ -14,7 +14,7 @@ export const pane = (bodyRows = 30, bodyColumns = 80) =>
     surface: 'terminal',
     props: {
       title: 'Commands',
-      isFocused: true,
+      isFocused,
       bodyColumns,
       placement: 'dock',
       scroll: { offset: 0, bodyRows },
@@ -43,6 +43,7 @@ export const engine = async ($: Engine, on: On, clipboard: { isCopied: true } | 
   const toasts: string[] = []
   const opened: PaneOpenArgs[] = []
   const closed: string[] = []
+  const open = new Set<string>()
   on('command.register', (_, e) => ({ value: { command: e.name } }))
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('session.end', (_, e) => ({ sessionId: e.sessionId }))
@@ -53,12 +54,15 @@ export const engine = async ($: Engine, on: On, clipboard: { isCopied: true } | 
   })
   on('ui.open', (_, e) => {
     opened.push(e)
+    open.add(e.id)
     return { value: { isPlaced: true as const } }
   })
   on('ui.close', (_, e) => {
     closed.push(e.id)
+    open.delete(e.id)
     return { value: undefined }
   })
+  on('ui.panes', () => ({ value: [...open].map(id => ({ id, title: id, isShown: true, isFocused: false, isPlaced: true })) }))
   // The engine draws nothing of its own in the pane: the mod owns its whole body.
   on('ui.render', ($, e) => {
     const { Box } = $.ui.resolve(e)
