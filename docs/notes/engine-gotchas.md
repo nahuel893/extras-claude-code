@@ -23,6 +23,7 @@ What building these mods taught about the Claude Code mod engine. Each item cost
 
 ## Runtime
 
+- `$.ui.open({ focus: true })` called inside a `command.run` hook is opened without the keyboard: the surface grants focus only while the prompt has the keys over an empty composer, and the composer is not idle while the command runs. Open after the command returns: `$.clock.after(100, () => void openPane($))` and answer the command at once (command-register does this).
 - Background work goes on `$.clock.after(0)` from `command.run`, so the command answers at once.
 - A hook gets 10 s of its own time per dispatch (`HookBudget.ms` in the engine types). The clock stops while a `next(e)` or `$` call is in flight, so a long `$.model.complete` costs nothing. But it keeps running through `$.clock.sleep` and through awaiting a plain promise, such as a lock. Past the budget the hook is skipped, and a `tool.call` that no hook answers fails. Read `next.budget.remainingMs` to bound a wait (board's tool waits at most about 7 s for `/board`).
 - `$.fs.write` creates parent directories.
