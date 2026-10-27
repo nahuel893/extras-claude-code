@@ -63,6 +63,16 @@ yay -S --mflags --skipchecksums piper-tts
 - **Outside fullscreen** the panel sits inline above the prompt, as tall as its content. The
   keyboard works the same there (digits, Enter, `h`/`l`, Tab, Esc); only clicks need fullscreen.
 
+## Where the register is kept
+
+The register is written to `~/.cache/refined-claude-code/projects/<cwd slug>/<session id>/commands.json`
+(the cwd slug is the working directory with every `/` replaced by `-`) each time it changes: after
+a reply that adds commands and after a `/clear`, which writes an empty list. It survives sending
+Claude Code to the background and a restart of the same session id: at session start, an empty
+register is loaded from that session's file, with the message counter, so new replies do not join an
+old message. Only the current session's file is ever read. A missing or corrupt file means an empty
+register, and a failed write only shows one toast.
+
 ## What counts as a command
 
 The rule is the same one the openskin mod uses to frame commands:
