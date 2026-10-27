@@ -63,6 +63,8 @@ yay -S --mflags --skipchecksums piper-tts
 - **Outside fullscreen** the panel sits inline above the prompt, as tall as its content. The
   keyboard works the same there (digits, Enter, `h`/`l`, Tab, Esc); only clicks need fullscreen.
 
+`/cc` also works while Claude is still answering; it shows the commands of the blocks already finished.
+
 ## Where the register is kept
 
 The register is written to `~/.cache/refined-claude-code/projects/<cwd slug>/<session id>/commands.json`
