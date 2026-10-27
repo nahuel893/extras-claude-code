@@ -1,6 +1,6 @@
 {
   "name": "command-register",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A numbered register of every shell command Claude gives in the session: /cc opens a panel to browse them message by message and copy one, /cc <n> copies command n.",
   "author": { "name": "nahuel893" },
   "types": "./types/index.d.ts"
