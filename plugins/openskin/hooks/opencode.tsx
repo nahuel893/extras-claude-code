@@ -1,5 +1,5 @@
-import type { Elements, On, RenderChildren } from 'claude-code'
-import { drawCommand, ENGINE_GUTTER, type Segment } from './commands'
+import type { Elements, EngineInterface, On, RenderChildren } from 'claude-code'
+import { drawCommand, ENGINE_GUTTER, type CopyContext, type Segment } from './commands'
 import type { Tracker } from './scrollbar'
 import { paint, type Theme } from './theme'
 
@@ -42,7 +42,7 @@ export const formatDuration = (ms: number): string => {
   return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
 }
 
-export type Ui = Pick<Elements['terminal'], 'Box' | 'Text' | 'Markdown' | 'Code'>
+export type Ui = Pick<Elements['terminal'], 'Box' | 'Text' | 'Markdown' | 'Code' | 'Button'>
 
 /**
  * `above`: clear rows over the block, outside it. Every piece (block, reply, footer) keeps
@@ -86,26 +86,34 @@ const ROOMY: Air = { above: 1, top: 1, bottom: 1 }
  * A row clear above it (see Air) keeps it off a block; a row of air inside, top and
  * bottom, keeps the text off the band's edges.
  */
-export const drawReply = (ui: Ui, theme: Theme, segments: Segment[]) => (
-  <ui.Box
-    flexDirection="column"
-    marginX={GUTTER}
-    marginTop={1}
-    backgroundColor={paint(theme.background)}
-    paddingLeft={TEXT_INDENT - GUTTER}
-    paddingRight={2}
-    paddingY={1}
-    gap={1}
-  >
-    {segments.map((segment, i) =>
-      segment.kind === 'prose' ? (
-        <ui.Markdown key={`prose:${i}`} text={segment.text} />
-      ) : (
-        drawCommand(ui, theme, segment, `command:${i}`)
-      ),
-    )}
-  </ui.Box>
-)
+export function drawReply(
+  ui: Ui,
+  $: Pick<EngineInterface, 'ui' | 'clock'>,
+  theme: Theme,
+  segments: Segment[],
+  copy?: CopyContext,
+) {
+  return (
+    <ui.Box
+      flexDirection="column"
+      marginX={GUTTER}
+      marginTop={1}
+      backgroundColor={paint(theme.background)}
+      paddingLeft={TEXT_INDENT - GUTTER}
+      paddingRight={2}
+      paddingY={1}
+      gap={1}
+    >
+      {segments.map((segment, i) =>
+        segment.kind === 'prose' ? (
+          <ui.Markdown key={`prose:${i}`} text={segment.text} />
+        ) : (
+          drawCommand(ui, $, theme, segment, `command:${i}`, copy)
+        ),
+      )}
+    </ui.Box>
+  )
+}
 
 /**
  * A summary keeps the engine's drawing (`drawn`, asked for without the bullet), shifted
