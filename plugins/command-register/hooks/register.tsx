@@ -149,6 +149,7 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'cc',
+      immediate: true,
       description: 'Copy a shell command Claude gave: /cc opens the panel, /cc <n> copies command n of the latest message',
     })
 

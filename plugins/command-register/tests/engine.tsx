@@ -64,7 +64,11 @@ export const engine = async (
     files[e.path] = e.text
     return { value: undefined }
   })
-  on('command.register', (_, e) => ({ value: { command: e.name } }))
+  const registered: { name: string; immediate?: true }[] = []
+  on('command.register', (_, e) => {
+    registered.push(e)
+    return { value: { command: e.name } }
+  })
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('session.end', (_, e) => ({ sessionId: e.sessionId }))
   on('prompt.submit', (_, e) => ({ text: e.text }))
@@ -96,6 +100,7 @@ export const engine = async (
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
   return {
+    registered,
     files,
     writes,
     copied,
