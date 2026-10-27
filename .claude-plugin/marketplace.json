@@ -16,7 +16,7 @@
       "name": "command-register",
       "source": "./plugins/command-register",
       "description": "A register of the shell commands Claude gives: /cc opens a panel to browse them message by message and copy one.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "category": "productivity"
     },
     {
