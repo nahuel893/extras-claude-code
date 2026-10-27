@@ -22,10 +22,10 @@ Allowed edit surfaces: `plugins/command-register/**`, `.claude-plugin/marketplac
 
 ## Tasks
 
-- [ ] T1 Message grouping, order and storage: `turn` on each command, `shape` bump, `/cc <n>` on the latest message. Route: inline (one mod, one bounded writer already; pure logic).
-- [ ] T2 The pane: `$.ui.open`, `Pane` render, band removal. Route: inline.
-- [ ] T3 Navigation (`‹ ›` and hotkeys), digits, copy and close. Route: inline.
-- [ ] T4 README, CLAUDE.md line and test count, version 0.3.0 (plugin.json, marketplace.json). The README says clicks need fullscreen (`"tui": "fullscreen"`), where the pane sits in fullscreen (docked beside the transcript, a tab next to openskin's panel) and that outside fullscreen it is inline and the keyboard works. Route: inline.
+- [x] T1 Message grouping, order and storage: `turn` on each command, `shape` bump, `/cc <n>` on the latest message. Route: inline (one mod, one bounded writer already; pure logic).
+- [x] T2 The pane: `$.ui.open`, `Pane` render, band removal. Route: inline.
+- [x] T3 Navigation (`‹ ›` and hotkeys), digits, copy and close. Route: inline.
+- [x] T4 README, CLAUDE.md line and test count, version 0.3.0 (plugin.json, marketplace.json). The README says clicks need fullscreen (`"tui": "fullscreen"`), where the pane sits in fullscreen (docked beside the transcript, a tab next to openskin's panel) and that outside fullscreen it is inline and the keyboard works. Route: inline.
 
 ## Checks
 
@@ -38,3 +38,14 @@ Branch `feat/cc-panel`. Engram mirror `odd/cc-panel/tasks`: PENDING.
 ## Commits
 
 (filled per task)
+- 363d034 feat(command-register): group commands by message (turn) (T1). RED: 2 of 4 new tests failed; GREEN: 36 pass.
+- ca2fcaf feat(command-register): open /cc as a focused pane, drop the band (T2). RED: 9 of 20 failed; GREEN: 20 pass. Band tests replaced by pane tests.
+- e25b6d9 feat(command-register): switch messages with ‹ › and copy by digit (T3). RED: 7 of 31 failed; GREEN: 30 pass.
+- b6e9ad3, 50232aa chore: version 0.3.0 (plugin.json, marketplace.json).
+- docs commit (T4): README, CLAUDE.md line and test count (30).
+
+## Decisions
+
+- Shape migration: commands-1 held no turn, so it is dropped (the atom declines it), not migrated.
+- Hotkeys: h older, l newer. The Input keeps every printable key while it holds the ring, and a Button hotkey acts only when a Button holds it, so letters and digits do not fight the filter. The filter is not auto-focused.
+- Engine limits: the test kit has no $.ui.close, so the ui.close reset hook is not covered by a test. tsc not run (not installed).
