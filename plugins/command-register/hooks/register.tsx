@@ -2,6 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, RenderSurface } from 'claude-code'
 import type { Command } from '../types'
 import { commandsIn } from './commands'
+import { lastTurn, parseRegister, registerPath, registerText } from './store'
 import { firstLine, hintText, messagesOf, previewLines, previewRule, rowLabel, visible } from './dialog'
 import type { Message } from './dialog'
 
@@ -14,6 +15,9 @@ const commands = atom({ plugin: 'command-register', key: 'commands' } as const, 
 
 /** How many prompts the person has sent: the turn a reply's commands belong to. */
 const turn = atom({ plugin: 'command-register', key: 'turn' } as const, 0)
+
+/** Whether a failed save has been told to the person already: one toast, not one per append. */
+const saveWarned = atom({ plugin: 'command-register', key: 'saveWarned' } as const, false)
 
 /** The turn of the message the pane shows; null is the latest one. */
 const shown = atom({ plugin: 'command-register', key: 'shown' } as const, null)
@@ -36,6 +40,46 @@ const MIN_ROWS = 10
 const MAX_ROWS = 30
 /** How long after `/cc` returns the pane opens: the composer must be idle for the keys to be granted. */
 const OPEN_DELAY_MS = 100
+
+/** This session's register file, or undefined when the home directory is unknown. */
+async function registerFile($: EngineInterface) {
+  const home = await $.env.get('HOME')
+
+  return home ? registerPath(home, await $.session.cwd(), await $.session.id()) : undefined
+}
+
+/**
+ * Writes the register to this session's file, so it outlives the process (a background or a
+ * restart of the session). A failure never reaches the caller: the register stays in memory and the
+ * person is told once.
+ */
+async function save($: EngineInterface) {
+  try {
+    const path = await registerFile($)
+    if (path === undefined) throw new Error('HOME is not set')
+    await $.fs.write(path, registerText(await read($, commands)))
+  } catch {
+    if (await read($, saveWarned)) return
+    await update($, saveWarned, () => true)
+    $.ui.toast('Could not save the command register to disk: it stays in memory only.')
+  }
+}
+
+/** Loads this session's file into an empty register, with the turn counter at its highest stored turn. */
+async function restore($: EngineInterface) {
+  try {
+    if ((await read($, commands)).length > 0) return
+    const path = await registerFile($)
+    if (path === undefined) return
+    const stored = parseRegister(await $.fs.read(path))
+    if (stored.length === 0) return
+
+    await update($, commands, () => stored)
+    await update($, turn, n => Math.max(n, lastTurn(stored)))
+  } catch {
+    // A missing or unreadable file is an empty register.
+  }
+}
 
 /** Copies command `n` (1-based) of the latest message and answers the line saying so, or why not. */
 const copyNumber = async ($: EngineInterface, n: number) => {
@@ -108,6 +152,8 @@ export const register: Register = on => {
       description: 'Copy a shell command Claude gave: /cc opens the panel, /cc <n> copies command n of the latest message',
     })
 
+    await restore($)
+
     return next(e)
   })
 
@@ -126,6 +172,7 @@ export const register: Register = on => {
           ? list
           : [...list, ...found.map((text): Command => ({ turn: current, row: e.uuid, text }))],
       )
+      await save($)
     }
 
     return next(e)
@@ -136,6 +183,7 @@ export const register: Register = on => {
     if (e.reason === 'clear') {
       await update($, commands, () => [])
       await update($, turn, () => 0)
+      await save($)
     }
 
     return next(e)

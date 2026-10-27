@@ -9,6 +9,7 @@ declare module 'claude-code' {
       shown: number | null
       focusKey: string | null
       filter: string
+      saveWarned: boolean
     }
   }
 }

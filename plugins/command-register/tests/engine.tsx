@@ -37,13 +37,33 @@ export const reply = (uuid: string, text: string, agentId?: string) => ({
  * The register is read back through `/cc <n>`, as the person reads it: the kit's `$.state` is the
  * mod's alone.
  */
-export const engine = async ($: Engine, on: On, clipboard: { isCopied: true } | { isCopied: false; reason: string } = { isCopied: true }) => {
+/** Where the mod keeps this session's register, with the session the engine stand-in reports. */
+export const REGISTER_FILE = '/home/test/.cache/refined-claude-code/projects/-home-test-app/session-1/commands.json'
+
+export const engine = async (
+  $: Engine,
+  on: On,
+  clipboard: { isCopied: true } | { isCopied: false; reason: string } = { isCopied: true },
+  disk: { files?: Record<string, string>; failWrites?: boolean } = {},
+) => {
+  const files = disk.files ?? {}
+  const writes: { path: string; text: string }[] = []
   const clock = mock.clock(on, { now: 0 })
   const copied: string[] = []
   const toasts: string[] = []
   const opened: PaneOpenArgs[] = []
   const closed: string[] = []
   const open = new Set<string>()
+  on('env.get', () => ({ value: '/home/test' }))
+  on('session.cwd', () => ({ value: '/home/test/app' }))
+  on('session.id', () => ({ value: 'session-1' }))
+  on('fs.read', (_, e) => (e.path in files ? { value: files[e.path] as string } : { deny: `ENOENT: ${e.path}` }))
+  on('fs.write', (_, e) => {
+    if (disk.failWrites) return { deny: `EACCES: ${e.path}` }
+    writes.push({ path: e.path, text: e.text })
+    files[e.path] = e.text
+    return { value: undefined }
+  })
   on('command.register', (_, e) => ({ value: { command: e.name } }))
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('session.end', (_, e) => ({ sessionId: e.sessionId }))
@@ -76,6 +96,8 @@ export const engine = async ($: Engine, on: On, clipboard: { isCopied: true } | 
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
   return {
+    files,
+    writes,
     copied,
     toasts,
     opened,
