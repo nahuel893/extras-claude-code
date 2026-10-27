@@ -2,13 +2,17 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, RenderSurface } from 'claude-code'
 import type { Command } from '../types'
 import { commandsIn } from './commands'
-import { firstLine, hintText, previewLines, previewRule, rowLabel, visible } from './dialog'
+import { firstLine, messagesOf, hintText, previewLines, previewRule, rowLabel, visible } from './dialog'
 
 /**
- * The register, oldest first: a command's number is its place + 1. Change the tag when a
- * command's fields change: it declines what an earlier version stored, which outlives a reload.
+ * The register, oldest first. Each command carries the prompt counter of its turn (`turn`), which
+ * is what makes a message. Change the tag when a command's fields change: it declines what an
+ * earlier version stored, which outlives a reload (commands-1 held no `turn`, so it is dropped).
  */
-const commands = atom({ plugin: 'command-register', key: 'commands' } as const, [], { shape: 'commands-1' })
+const commands = atom({ plugin: 'command-register', key: 'commands' } as const, [], { shape: 'commands-2' })
+
+/** How many prompts the person has sent: the turn a reply's commands belong to. */
+const turn = atom({ plugin: 'command-register', key: 'turn' } as const, 0)
 
 /** Whether `/cc` has the list open in the band above the prompt. */
 const isOpen = atom({ plugin: 'command-register', key: 'isOpen' } as const, false)
@@ -23,14 +27,20 @@ const EMPTY = 'No shell commands yet: the register fills as Claude gives them.'
 const USAGE = 'Usage: /cc to pick from the list, or /cc <n> to copy command n.'
 const OPENED = "Command list open above the prompt: press a row's digit to copy it."
 
-/** Copies command `n` (1-based) and answers the line saying so, or why not. */
+/** Copies command `n` (1-based) of the latest message and answers the line saying so, or why not. */
 const copyNumber = async ($: EngineInterface, n: number, surface?: RenderSurface) => {
-  const list = await read($, commands)
-  if (list.length === 0) return EMPTY
+  const latest = messagesOf(await read($, commands)).at(-1)
+  if (latest === undefined) return EMPTY
 
-  const command = list[n - 1]
-  if (!command) return `There is no command #${n}: the register holds #1 to #${list.length}.`
+  const command = latest.commands[n - 1]
+  if (!command) return `There is no command #${n}: the latest message holds #1 to #${latest.commands.length}.`
 
+  return copyCommand($, n, command.text, surface)
+}
+
+/** Copies `text` as command `n` and answers the line saying so, or why not. */
+const copyCommand = async ($: EngineInterface, n: number, text: string, surface?: RenderSurface) => {
+  const command = { text }
   const copied = await $.ui.copy({ text: command.text, ...(surface === undefined ? {} : { surface }) })
 
   return copied.isCopied
@@ -63,11 +73,12 @@ export const register: Register = on => {
 
     const found = e.message.content.flatMap(block => (block.type === 'text' && typeof block.text === 'string' ? commandsIn(block.text) : []))
     if (found.length > 0) {
+      const current = await read($, turn)
       await update($, commands, list =>
         // A row is registered once: a replayed append (a worker restarted mid-hook) adds nothing.
         list.some(command => command.row === e.uuid)
           ? list
-          : [...list, ...found.map((text): Command => ({ row: e.uuid, text }))],
+          : [...list, ...found.map((text): Command => ({ turn: current, row: e.uuid, text }))],
       )
     }
 
@@ -76,7 +87,10 @@ export const register: Register = on => {
 
   // A /clear ends the conversation the numbers point into; the next one starts at #1.
   on('session.end', async ($, e, next) => {
-    if (e.reason === 'clear') await update($, commands, () => [])
+    if (e.reason === 'clear') {
+      await update($, commands, () => [])
+      await update($, turn, () => 0)
+    }
 
     return next(e)
   })
@@ -85,6 +99,7 @@ export const register: Register = on => {
   // the keys back to the prompt and raises nothing), so going back to the prompt is the dismissal.
   // `/cc` itself passes here first and opens the list again at `command.run`.
   on('prompt.submit', async ($, e, next) => {
+    await update($, turn, n => n + 1)
     await closeList($)
 
     return next(e)
@@ -94,7 +109,7 @@ export const register: Register = on => {
     const args = e.args.trim()
 
     if (args === '') {
-      if ((await read($, commands)).length === 0) return { text: EMPTY }
+      if (messagesOf(await read($, commands)).length === 0) return { text: EMPTY }
       await closeList($)
       await update($, isOpen, () => true)
 
@@ -143,7 +158,7 @@ export const register: Register = on => {
     const preview = selected === undefined ? [] : previewLines(selected.text, inner, previewRoom)
 
     const pick = (n: number) => async (press: { surface: RenderSurface }) => {
-      const said = await copyNumber($, n, press.surface)
+      const said = await copyCommand($, n, list[n - 1]?.text ?? '', press.surface)
       await closeList($)
       $.ui.toast(said)
     }

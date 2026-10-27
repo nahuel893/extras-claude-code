@@ -1,8 +1,8 @@
-/** One shell command Claude gave: the stored row it came from and its text. Its number is its place + 1. */
-export type Command = { row: string; text: string }
+/** One shell command Claude gave: the prompt counter of its turn, the stored row it came from and its text. */
+export type Command = { turn: number; row: string; text: string }
 
 declare module 'claude-code' {
   interface PluginState {
-    'command-register': { commands: Shaped<Command[]>; isOpen: boolean; focusKey: string | null; filter: string }
+    'command-register': { commands: Shaped<Command[]>; turn: number; isOpen: boolean; focusKey: string | null; filter: string }
   }
 }

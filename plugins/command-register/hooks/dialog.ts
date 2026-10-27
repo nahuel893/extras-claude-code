@@ -4,6 +4,27 @@
 /** A register entry as the list holds it: its 1-based register number and its text. */
 export type Entry = { n: number; text: string }
 
+/** A message: the commands Claude gave answering one prompt, in order, numbered 1..k. */
+export type Message = { turn: number; commands: Entry[] }
+
+/**
+ * The register grouped by turn, oldest message first. A turn that gave no command has no message,
+ * so every message holds at least one command.
+ */
+export const messagesOf = (list: readonly { turn: number; text: string }[]): Message[] => {
+  const messages: Message[] = []
+  for (const { turn, text } of list) {
+    let message = messages.at(-1)
+    if (message === undefined || message.turn !== turn) {
+      message = { turn, commands: [] }
+      messages.push(message)
+    }
+    message.commands.push({ n: message.commands.length + 1, text })
+  }
+
+  return messages
+}
+
 /** The command's first line, as a notice or a list row names it. */
 export const firstLine = (text: string) => text.split('\n').find(line => line.trim())?.trim() ?? ''
 
