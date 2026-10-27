@@ -33,7 +33,7 @@ export const reply = (uuid: string, text: string, agentId?: string) => ({
  * The register is read back through `/cc <n>`, as the person reads it: the kit's `$.state` is the
  * mod's alone.
  */
-export const engine = async ($: Engine, on: On) => {
+export const engine = async ($: Engine, on: On, clipboard: { isCopied: true } | { isCopied: false; reason: string } = { isCopied: true }) => {
   const copied: string[] = []
   const toasts: string[] = []
   const opened: PaneOpenArgs[] = []
@@ -62,7 +62,7 @@ export const engine = async ($: Engine, on: On) => {
   on('ui.focus', () => ({ value: {} }))
   on('ui.copy', (_, e) => {
     copied.push(e.text)
-    return { value: { isCopied: true as const } }
+    return { value: clipboard }
   })
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 

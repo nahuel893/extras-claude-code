@@ -60,6 +60,17 @@ const messageShown = (messages: readonly Message[], at: number | null) => {
   return index === -1 ? messages.length - 1 : index
 }
 
+/** Shows the message `delta` places away (-1 older, +1 newer), the end of the list stopping it. */
+async function step($: EngineInterface, delta: number) {
+  const messages = messagesOf(await read($, commands))
+  const target = messages[messageShown(messages, await read($, shown)) + delta]
+  if (target === undefined) return
+
+  await update($, shown, () => target.turn)
+  await update($, filter, () => '')
+  await update($, focusKey, () => null)
+}
+
 /** Forgets what the last opening left: the message shown, the filter and the ring's place. */
 async function reset($: EngineInterface) {
   await update($, shown, () => null)
@@ -193,7 +204,9 @@ export const register: Register = on => {
       <Box flexDirection="column">
         <Box key="head">
           <Text bold color="suggestion">{'Commands  '}</Text>
-          <Text>{`message ${at + 1} of ${messages.length}`}</Text>
+          <Button key="older" plain hotkey="h" dimColor={at === 0} label="‹" onPress={() => step($, -1)} />
+          <Text>{` message ${at + 1} of ${messages.length} `}</Text>
+          <Button key="newer" plain hotkey="l" dimColor={at === messages.length - 1} label="›" onPress={() => step($, 1)} />
         </Box>
         <Input
           key="filter"
