@@ -138,3 +138,15 @@ test('the pane holds nothing once the register is cleared', async ($, on) => {
   expect((await ui.find({ type: 'Text', text: /No shell commands/ }))?.text).toContain('No shell commands')
   await ui.unmount()
 })
+
+test('the pane opens after the command has returned, not inside it: focus is refused while the composer is busy', async ($, on) => {
+  const { ccNow, opened, clock } = await engine($, on)
+  await messages($, ['ls'])
+
+  expect(await ccNow()).toBe('Command panel open: a digit or Enter copies a command, Esc closes it.')
+  expect(opened).toEqual([])
+
+  await clock.advance(100)
+  expect(opened).toHaveLength(1)
+  expect(opened[0]).toMatchObject({ id: 'cc', focus: true })
+})

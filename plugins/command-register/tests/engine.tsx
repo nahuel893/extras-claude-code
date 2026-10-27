@@ -1,5 +1,9 @@
+import { mock } from 'claude-code/testing'
 import type { Engine } from 'claude-code/testing'
 import type { On, PaneOpenArgs } from 'claude-code'
+
+/** The wait the mod puts between the command returning and the pane opening. */
+const OPEN_DELAY_MS = 100
 
 /** The `/cc` pane as the surface hands it to the mod's `ui.render` hook (docked, with the keys). */
 export const pane = (bodyRows = 30, bodyColumns = 80) =>
@@ -34,6 +38,7 @@ export const reply = (uuid: string, text: string, agentId?: string) => ({
  * mod's alone.
  */
 export const engine = async ($: Engine, on: On, clipboard: { isCopied: true } | { isCopied: false; reason: string } = { isCopied: true }) => {
+  const clock = mock.clock(on, { now: 0 })
   const copied: string[] = []
   const toasts: string[] = []
   const opened: PaneOpenArgs[] = []
@@ -71,7 +76,14 @@ export const engine = async ($: Engine, on: On, clipboard: { isCopied: true } | 
     toasts,
     opened,
     closed,
-    /** Runs `/cc <args>` and answers its output line. */
-    cc: async (args = '') => (await $.command.run({ command: 'cc', args, origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 200 } })).text,
+    clock,
+    /** Runs `/cc <args>` and answers its output line, the command having returned and no time passed. */
+    ccNow: async (args = '') => (await $.command.run({ command: 'cc', args, origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 200 } })).text,
+    /** Runs `/cc <args>`, then lets the pane open as it does once the command has returned. */
+    cc: async (args = '') => {
+      const { text } = await $.command.run({ command: 'cc', args, origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 200 } })
+      await clock.advance(OPEN_DELAY_MS)
+      return text
+    },
   }
 }

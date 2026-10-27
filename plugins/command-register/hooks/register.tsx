@@ -34,6 +34,8 @@ const OPENED = 'Command panel open: a digit or Enter copies a command, Esc close
 const CHROME_ROWS = 8
 const MIN_ROWS = 10
 const MAX_ROWS = 30
+/** How long after `/cc` returns the pane opens: the composer must be idle for the keys to be granted. */
+const OPEN_DELAY_MS = 100
 
 /** Copies command `n` (1-based) of the latest message and answers the line saying so, or why not. */
 const copyNumber = async ($: EngineInterface, n: number) => {
@@ -69,6 +71,23 @@ async function step($: EngineInterface, delta: number) {
   await update($, shown, () => target.turn)
   await update($, filter, () => '')
   await update($, focusKey, () => null)
+}
+
+/** Opens the pane on the keyboard, as tall as the longest message needs. */
+async function openPane($: EngineInterface) {
+  const messages = messagesOf(await read($, commands))
+  if (messages.length === 0) return
+
+  const longest = Math.max(...messages.map(message => message.commands.length))
+  await $.ui.open({
+    id: PANE,
+    title: 'Commands',
+    focus: true,
+    closeOnEscape: true,
+    holdToasts: true,
+    columns: 80,
+    rows: Math.min(MAX_ROWS, Math.max(MIN_ROWS, longest + CHROME_ROWS)),
+  })
 }
 
 /** Forgets what the last opening left: the message shown, the filter and the ring's place. */
@@ -141,15 +160,10 @@ export const register: Register = on => {
       if (messages.length === 0) return { text: EMPTY }
 
       await reset($)
-      const longest = Math.max(...messages.map(message => message.commands.length))
-      await $.ui.open({
-        id: PANE,
-        title: 'Commands',
-        focus: true,
-        closeOnEscape: true,
-        holdToasts: true,
-        columns: 80,
-        rows: Math.min(MAX_ROWS, Math.max(MIN_ROWS, longest + CHROME_ROWS)),
+      // The surface grants the keyboard only while the composer is idle and empty, which it is not
+      // while this command runs: open once it has returned.
+      $.clock.after(OPEN_DELAY_MS, () => {
+        void openPane($)
       })
 
       return { text: OPENED }
