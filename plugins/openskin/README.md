@@ -5,7 +5,7 @@ An OpenCode-style look for the Claude Code terminal transcript, as a Claude Code
 - Your prompts sit in a full-width block with an accent bar down the left edge.
 - Tool calls, their results and errors get blocks of their own, with a quieter bar.
 - Claude's replies are drawn without a bullet, on a background band of their own.
-- Shell commands in a reply are framed, so they stand apart from the prose.
+- Shell commands in a reply are framed, so they stand apart from the prose. Each frame has a `[copy]` button on the right end of its top border: a click copies the whole command and the label reads `copied` for a moment (a failed copy shows a toast with the reason).
 - Each turn closes with a footer: `▣ Claude · <model> · <duration>`.
 
 - In fullscreen, a status panel of cards docks beside the transcript: the project's directory, git branch and uncommitted changes with your status line script's output, one row per part; how full the context window is; each turn's tokens; your subscription's 5-hour and weekly windows; then the session's board and summary.
@@ -52,6 +52,8 @@ Change them with `/plugin configure openskin@refined-claude-code`. A color is a 
 | `command` | `bashBorder` | The frame and label of shell commands. |
 | `background` | `#1c1c22` | The band behind Claude's replies; `none` draws no band. |
 | `panelBackground` | `none` | The background of the whole status panel, to match your terminal (`#000000` on a black one); `none` paints nothing and keeps what Claude Code draws there. `/skin` presets leave it as it is. |
+
+The `[copy]` button needs Claude Code's fullscreen layout, because only fullscreen reports mouse clicks. Turn it on with `/tui fullscreen`, or set `"tui": "fullscreen"` in `~/.claude/settings.json` to make it the default. On the main screen the engine reports that its layout is not fullscreen (`RenderViewport.isFullscreen`), and openskin draws no button there; a surface that does not say gets the button.
 
 With `opencodeStyle` off and `commandFrames` on, Claude Code keeps its own transcript and only the commands are framed. With both off, the mod draws nothing.
 

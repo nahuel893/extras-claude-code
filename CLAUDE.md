@@ -12,7 +12,7 @@ Claude Code mods (function-hooks plugins) published as one marketplace. Public r
 
 ## Mods
 
-- **openskin**: the OpenCode look for the transcript (barred prompts and tool calls, reply band, framed shell commands, footer), every color an option. It also owns:
+- **openskin**: the OpenCode look for the transcript (barred prompts and tool calls, reply band, framed shell commands with a clickable `[copy]` button in fullscreen, footer), every color an option. It also owns:
   - the status panel docked beside the transcript in fullscreen. It is built from cards with the title on the border: Status (project, branch, changes), Context (a ten-cell bar in theme colors), Tokens, Usage, Board, Summary. Unicode icons, never emoji: `◔ ⇅ ◷ ≡ ¶`.
   - `/panel`, which opens the panel below 144 columns.
   - `/skin`, which offers 11 theme presets and writes the colors through `$.config.set`.
@@ -43,7 +43,7 @@ The panel reuses the user's status line script, which lives outside this repo:
   - `claude plugin test plugins/<mod>`
   - `tsc -p plugins/<mod>`, once the engine has laid the types in `.claude-plugin/types/` (gitignored).
 - Test-first for behavior changes. Observe RED, then GREEN. Regression tests sit next to the code they guard.
-- Last known test counts: openskin 118, command-register 32, board 28, summarize 9.
+- Last known test counts: openskin 126, command-register 32, board 28, summarize 9.
 - Artifacts (code, comments, docs, commit messages) are in English.
 
 ## Commits and publishing

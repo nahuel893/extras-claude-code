@@ -1,5 +1,5 @@
 import type { Register } from 'claude-code'
-import { drawFramedCommands, SHELL_FENCE_RULE, splitCommands, type Segment } from './commands'
+import { drawFramedCommands, SHELL_FENCE_RULE, type CopyContext, type CopyState, splitCommands, type Segment } from './commands'
 import { drawReply, drawSummary, registerOpencode } from './opencode'
 import { createTracker, TRACKED, trackRows } from './scrollbar'
 import { registerSkin } from './skin'
@@ -29,6 +29,7 @@ export const register: Register = (on, options) => {
   // their own hooks (a component takes one hook, so a second mod could sit above and never run);
   // the others get a hook that only notes it.
   const tracker = createTracker()
+  const copyState: CopyState = { copied: new Set() }
   const isOwned = (component: string) =>
     component === 'AssistantMessage' ? opencodeStyle || commandFrames : opencodeStyle && component !== 'ToolResult'
   if (options.statusPanel !== false) {
@@ -52,11 +53,12 @@ export const register: Register = (on, options) => {
   on('ui.render', { component: 'AssistantMessage' }, async ($, e, next) => {
     tracker.see(e)
     const ui = $.ui.resolve(e)
+    const copy: CopyContext = { state: copyState, requestId: e.requestId, isClickable: e.viewport?.isFullscreen !== false }
 
     if (opencodeStyle) {
       if (e.props.isSummary) return drawSummary(ui, await next({ ...e, props: { ...e.props, isFirstOfReply: false } }))
 
-      return drawReply(ui, theme, commandFrames ? splitCommands(e.props.text) : asProse(e.props.text))
+      return drawReply(ui, $, theme, commandFrames ? splitCommands(e.props.text) : asProse(e.props.text), copy)
     }
 
     // Commands framed in the engine's own transcript: a summary or a reply with no
@@ -66,8 +68,9 @@ export const register: Register = (on, options) => {
     const segments = splitCommands(e.props.text)
     if (!segments.some(segment => segment.kind === 'command')) return next(e)
 
-    return drawFramedCommands(ui, theme, segments, (text, i) =>
+    return drawFramedCommands(ui, $, theme, segments, (text, i) =>
       next({ ...e, props: { ...e.props, text, isFirstOfReply: i === 0 && e.props.isFirstOfReply } }),
+      copy,
     )
   })
 }

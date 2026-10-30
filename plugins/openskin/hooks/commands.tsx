@@ -1,4 +1,4 @@
-import type { Elements, RenderChildren } from 'claude-code'
+import type { Elements, EngineInterface, RenderChildren } from 'claude-code'
 import type { Theme } from './theme'
 
 const SHELL_LANGUAGES = new Set(['bash', 'sh', 'zsh', 'shell', 'console', 'fish', 'terminal', 'shellsession'])
@@ -77,34 +77,114 @@ export const splitCommands = (text: string): Segment[] => {
   return segments
 }
 
-type CommandUi = Pick<Elements['terminal'], 'Box' | 'Text' | 'Code'>
+type CommandUi = Pick<Elements['terminal'], 'Box' | 'Text' | 'Code' | 'Button'>
 
-/** A shell command in its round frame, labelled `❯ command`, highlighted in its language. */
-export const drawCommand = (
-  { Box, Text, Code }: CommandUi,
+/** How long a button reads `copied` after it took the command. */
+export const COPIED_MS = 1500
+
+/** The engine calls a copy button makes. */
+type CopyEngine = Pick<EngineInterface, 'ui' | 'clock'>
+
+/** What the copy buttons of one session remember: the commands copied a moment ago, by address. */
+export type CopyState = { copied: Set<string> }
+
+/**
+ * What a command's `[copy]` button needs besides the engine (`$` travels as an argument, never
+ * inside an object): the session's memory, the row it is drawn
+ * in and whether the layout reports clicks (`RenderViewport.isFullscreen`: false on the main
+ * screen, where a Button is never pressed; absent means the surface did not say, so it is drawn).
+ */
+export type CopyContext = {
+  state: CopyState
+  requestId: string
+  isClickable: boolean
+}
+
+/**
+ * (A function declaration: the engine follows `$` past an import only into one.)
+ * Copies a command to the surface the press came from. A copy that took shows `copied` for a
+ * moment; one that did not is a toast naming why.
+ */
+export async function pressCopy(
+  $: CopyEngine,
+  state: CopyState,
+  address: string,
+  text: string,
+  surface: Parameters<EngineInterface['ui']['copy']>[0]['surface'],
+) {
+  let reason = 'the clipboard did not answer'
+  try {
+    const result = await $.ui.copy({ text, surface })
+    if (result.isCopied) {
+      state.copied.add(address)
+      $.ui.invalidate('ui.render')
+      $.clock.after(COPIED_MS, () => {
+        state.copied.delete(address)
+        $.ui.invalidate('ui.render')
+      })
+      return
+    }
+    reason = result.reason
+  } catch {
+    // Keep the generic reason.
+  }
+  $.ui.toast(`Could not copy the command: ${reason}`)
+}
+
+/**
+ * A shell command in its round frame, labelled `❯ command`, highlighted in its language. With a
+ * `copy` context, a `[copy]` button sits over the right end of the top border: an absolutely
+ * positioned sibling after the bordered Box (a Box clips its children to its inside, see the
+ * panel's cards), so it paints over the border without moving the frame's content.
+ */
+export function drawCommand(
+  { Box, Text, Code, Button }: CommandUi,
+  $: CopyEngine,
   theme: Theme,
   command: Extract<Segment, { kind: 'command' }>,
   key?: string,
-) => (
-  <Box key={key} flexDirection="column" borderStyle="round" borderColor={theme.command} paddingX={1}>
-    <Text color={theme.command} bold>
-      ❯ command
-    </Text>
-    <Code source={command.code} language={command.language} />
-  </Box>
-)
+  copy?: CopyContext,
+) {
+  const address = `copy:${key ?? 'command'}`
+  const memory = copy && `${copy.requestId}:${address}`
+  const isCopied = memory !== undefined && copy!.state.copied.has(memory)
+
+  return (
+    <Box key={key} flexDirection="column">
+      <Box flexDirection="column" borderStyle="round" borderColor={theme.command} paddingX={1}>
+        <Text color={theme.command} bold>
+          ❯ command
+        </Text>
+        <Code source={command.code} language={command.language} />
+      </Box>
+      {copy?.isClickable && (
+        <Box position="absolute" top={0} right={2}>
+          <Button
+            key={address}
+            plain
+            onPress={press => pressCopy($, copy.state, memory!, command.code, press.surface)}
+          >
+            <Text color={isCopied ? theme.accent : theme.muted}>{isCopied ? 'copied' : '[copy]'}</Text>
+          </Button>
+        </Box>
+      )}
+    </Box>
+  )
+}
 
 /**
  * A reply left to the engine's drawing but for its shell commands: each prose piece is
  * drawn by `drawProse` (the engine), each command framed behind the engine's bullet
  * gutter so it lines up with the text, with a row clear above it as the engine's rows have.
  */
-export const drawFramedCommands = async (
+export async function drawFramedCommands(
   ui: CommandUi,
+  $: CopyEngine,
   theme: Theme,
   segments: Segment[],
   drawProse: (text: string, index: number) => Promise<RenderChildren>,
-) => {
+  copy?: CopyContext,
+) {
   const { Box } = ui
   const rows = await Promise.all(
     segments.map(async (segment, i) =>
@@ -114,7 +194,7 @@ export const drawFramedCommands = async (
         </Box>
       ) : (
         <Box key={`command:${i}`} flexDirection="column" paddingLeft={ENGINE_GUTTER} marginTop={1}>
-          {drawCommand(ui, theme, segment)}
+          {drawCommand(ui, $, theme, segment, `command:${i}`, copy)}
         </Box>
       ),
     ),
