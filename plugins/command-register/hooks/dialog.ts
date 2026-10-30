@@ -1,8 +1,29 @@
-// Pure layout helpers of the `/cc` dialog: no engine calls, so the module-load rule about
+// Pure layout helpers of the `/cc` pane: no engine calls, so the module-load rule about
 // functions that receive `$` does not touch them.
 
 /** A register entry as the list holds it: its 1-based register number and its text. */
 export type Entry = { n: number; text: string }
+
+/** A message: the commands Claude gave answering one prompt, in order, numbered 1..k. */
+export type Message = { turn: number; commands: Entry[] }
+
+/**
+ * The register grouped by turn, oldest message first. A turn that gave no command has no message,
+ * so every message holds at least one command.
+ */
+export const messagesOf = (list: readonly { turn: number; text: string }[]): Message[] => {
+  const messages: Message[] = []
+  for (const { turn, text } of list) {
+    let message = messages.at(-1)
+    if (message === undefined || message.turn !== turn) {
+      message = { turn, commands: [] }
+      messages.push(message)
+    }
+    message.commands.push({ n: message.commands.length + 1, text })
+  }
+
+  return messages
+}
 
 /** The command's first line, as a notice or a list row names it. */
 export const firstLine = (text: string) => text.split('\n').find(line => line.trim())?.trim() ?? ''
@@ -21,14 +42,11 @@ export const rowLabel = (text: string, room: number) => {
   return cut(`${first}${more}`, Math.max(8, room))
 }
 
-/** The register, newest first, narrowed to the commands that hold `filter` (case-insensitive). */
-export const visible = (list: readonly { text: string }[], filter: string): Entry[] => {
+/** A message's commands, in order, narrowed to those that hold `filter` (case-insensitive). */
+export const visible = (entries: readonly Entry[], filter: string): Entry[] => {
   const needle = filter.trim().toLowerCase()
 
-  return list
-    .map((command, i) => ({ n: i + 1, text: command.text }))
-    .reverse()
-    .filter(entry => needle === '' || entry.text.toLowerCase().includes(needle))
+  return entries.filter(entry => needle === '' || entry.text.toLowerCase().includes(needle))
 }
 
 /**
@@ -50,18 +68,11 @@ export const previewLines = (text: string, width: number, max: number) => {
 /** The preview's rule: `┄ preview ┄┄┄…` to `width` cells. */
 export const previewRule = (width: number) => `┄ preview ${'┄'.repeat(Math.max(0, width - 10))}`
 
-/**
- * The hint's text before the close button (`0: close`), by whether the band holds the keyboard and
- * how much room the line has. One row always: the narrower the band, the fewer the words.
- */
-export const hintText = (isFocused: boolean, inner: number) => {
-  if (isFocused) {
-    if (inner >= 64) return '↑↓ move · enter copy · type to filter · esc back · '
-    if (inner >= 44) return '↑↓ move · enter copy · esc back · '
+/** The hint's text, by whether the pane holds the keyboard and how much room the pane's line has: the fewer the cells, the fewer the words. */
+export const hintText = (inner: number, isFocused = true) => {
+  if (!isFocused) return 'no keyboard: click a row'
+  if (inner >= 58) return '↑↓ move · enter or 1-9 copy · h/l message · esc close'
+  if (inner >= 40) return '1-9 copy · h/l message · esc close'
 
-    return '↑↓ enter esc · '
-  }
-  if (inner >= 44) return '1-9 copy · ctrl+x tab to browse · '
-
-  return '1-9 copy · '
+  return '1-9 · h/l · esc'
 }

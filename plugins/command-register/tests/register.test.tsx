@@ -31,7 +31,7 @@ test('every shell command in a reply is registered in order, prose and other fen
   await cc('2')
   await cc('3')
   expect(copied).toEqual(['systemctl status minecraft', 'journalctl -u minecraft -n 50\ndf -h', '!git status'])
-  expect(await cc('4')).toBe('There is no command #4: the register holds #1 to #3.')
+  expect(await cc('4')).toBe('There is no command #4: the latest message holds #1 to #3.')
 })
 
 test('numbering continues across replies, and /cc <n> says what it copied', async ($, on) => {
@@ -63,15 +63,15 @@ test('a row appended twice is registered once', async ($, on) => {
   await $.session.append(reply('r1', '```bash\nmake\n```'))
   await $.session.append(reply('r1', '```bash\nmake\n```'))
 
-  expect(await cc('2')).toBe('There is no command #2: the register holds #1 to #1.')
+  expect(await cc('2')).toBe('There is no command #2: the latest message holds #1 to #1.')
 })
 
 test('a number that is not one answers a notice', async ($, on) => {
   const { cc, copied } = await engine($, on)
   await $.session.append(reply('r1', '```bash\nmake\n```'))
 
-  expect(await cc('0')).toBe('There is no command #0: the register holds #1 to #1.')
-  expect(await cc('two')).toBe('Usage: /cc to pick from the list, or /cc <n> to copy command n.')
+  expect(await cc('0')).toBe('There is no command #0: the latest message holds #1 to #1.')
+  expect(await cc('two')).toBe('Usage: /cc to pick from the panel, or /cc <n> to copy command n of the latest message.')
   expect(copied).toEqual([])
 })
 

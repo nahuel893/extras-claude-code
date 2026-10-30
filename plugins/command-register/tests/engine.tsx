@@ -1,19 +1,23 @@
+import { mock } from 'claude-code/testing'
 import type { Engine } from 'claude-code/testing'
-import type { On } from 'claude-code'
+import type { On, PaneOpenArgs } from 'claude-code'
 
-/** The band above the prompt as the terminal hands it to the mod's `ui.render` hook. */
-export const band = (maxRows = 14) =>
+/** The wait the mod puts between the command returning and the pane opening. */
+const OPEN_DELAY_MS = 100
+
+/** The `/cc` pane as the surface hands it to the mod's `ui.render` hook (docked, with the keys). */
+export const pane = (bodyRows = 30, bodyColumns = 80, isFocused = true) =>
   ({
     plugin: 'command-register',
-    component: 'AbovePrompt',
-    requestId: 'above-prompt',
+    component: 'Pane',
+    requestId: 'cc',
     surface: 'terminal',
     props: {
-      hasSurvey: false,
-      isWorking: false,
-      maxRows,
-      bodyColumns: 100,
-      scroll: { offset: 0, bodyRows: maxRows - 1 },
+      title: 'Commands',
+      isFocused,
+      bodyColumns,
+      placement: 'dock',
+      scroll: { offset: 0, bodyRows },
       view: {},
     },
   }) as const
@@ -28,14 +32,43 @@ export const reply = (uuid: string, text: string, agentId?: string) => ({
 })
 
 /**
- * Stands in for the engine beneath the mod: the command registration and the clipboard, whose
- * writes it keeps so a test reads what `/cc` copied. The register is read back through `/cc <n>`,
- * as the person reads it: the kit's `$.state` is the mod's alone.
+ * Stands in for the engine beneath the mod: the command registration, the clipboard (whose writes
+ * it keeps so a test reads what `/cc` copied) and the pane (the opens and closes it was asked for).
+ * The register is read back through `/cc <n>`, as the person reads it: the kit's `$.state` is the
+ * mod's alone.
  */
-export const engine = async ($: Engine, on: On) => {
+/** Where the mod keeps this session's register, with the session the engine stand-in reports. */
+export const REGISTER_FILE = '/home/test/.cache/refined-claude-code/projects/-home-test-app/session-1/commands.json'
+
+export const engine = async (
+  $: Engine,
+  on: On,
+  clipboard: { isCopied: true } | { isCopied: false; reason: string } = { isCopied: true },
+  disk: { files?: Record<string, string>; failWrites?: boolean } = {},
+) => {
+  const files = disk.files ?? {}
+  const writes: { path: string; text: string }[] = []
+  const clock = mock.clock(on, { now: 0 })
   const copied: string[] = []
   const toasts: string[] = []
-  on('command.register', (_, e) => ({ value: { command: e.name } }))
+  const opened: PaneOpenArgs[] = []
+  const closed: string[] = []
+  const open = new Set<string>()
+  on('env.get', () => ({ value: '/home/test' }))
+  on('session.cwd', () => ({ value: '/home/test/app' }))
+  on('session.id', () => ({ value: 'session-1' }))
+  on('fs.read', (_, e) => (e.path in files ? { value: files[e.path] as string } : { deny: `ENOENT: ${e.path}` }))
+  on('fs.write', (_, e) => {
+    if (disk.failWrites) return { deny: `EACCES: ${e.path}` }
+    writes.push({ path: e.path, text: e.text })
+    files[e.path] = e.text
+    return { value: undefined }
+  })
+  const registered: { name: string; immediate?: true }[] = []
+  on('command.register', (_, e) => {
+    registered.push(e)
+    return { value: { command: e.name } }
+  })
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('session.end', (_, e) => ({ sessionId: e.sessionId }))
   on('prompt.submit', (_, e) => ({ text: e.text }))
@@ -43,22 +76,45 @@ export const engine = async ($: Engine, on: On) => {
     toasts.push(e.text)
     return { value: undefined }
   })
-  // What the engine (or a plugin beneath) draws in the band: the list must keep it.
+  on('ui.open', (_, e) => {
+    opened.push(e)
+    open.add(e.id)
+    return { value: { isPlaced: true as const } }
+  })
+  on('ui.close', (_, e) => {
+    closed.push(e.id)
+    open.delete(e.id)
+    return { value: undefined }
+  })
+  on('ui.panes', () => ({ value: [...open].map(id => ({ id, title: id, isShown: true, isFocused: false, isPlaced: true })) }))
+  // The engine draws nothing of its own in the pane: the mod owns its whole body.
   on('ui.render', ($, e) => {
-    const { Text } = $.ui.resolve(e)
-    return <Text>engine</Text>
+    const { Box } = $.ui.resolve(e)
+    return <Box />
   })
   on('ui.focus', () => ({ value: {} }))
   on('ui.copy', (_, e) => {
     copied.push(e.text)
-    return { value: { isCopied: true as const } }
+    return { value: clipboard }
   })
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
   return {
+    registered,
+    files,
+    writes,
     copied,
     toasts,
-    /** Runs `/cc <args>` and answers its output line. */
-    cc: async (args = '') => (await $.command.run({ command: 'cc', args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 100 } })).text,
+    opened,
+    closed,
+    clock,
+    /** Runs `/cc <args>` and answers its output line, the command having returned and no time passed. */
+    ccNow: async (args = '') => (await $.command.run({ command: 'cc', args, origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 200 } })).text,
+    /** Runs `/cc <args>`, then lets the pane open as it does once the command has returned. */
+    cc: async (args = '') => {
+      const { text } = await $.command.run({ command: 'cc', args, origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 200 } })
+      await clock.advance(OPEN_DELAY_MS)
+      return text
+    },
   }
 }
